@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Transformacija i konverzija koordinata</title>
+      <link rel="icon" type="image/png" href="ikona.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bitmaks/cm-web-fonts@latest/fonts.css">
+  <script src="height_anomaly_EGM2008.js"></script>
+  <style>
+    body { background:#F2F2F2; font-family:'CMU Serif',serif; padding:20px; }
+    h2 { margin:0 0 14px 0; }
+    .red { display:flex; align-items:center; gap:10px; margin:10px 0; max-width:880px; flex-wrap:wrap; }
+    .red label { width:170px; font-size:16px; }
+    .red select, .red input { font-family:inherit; font-size:16px; padding:6px; }
+    .red select { min-width:280px; }
+    .card { background:#fff; border:1px solid #ddd; border-radius:10px; padding:14px; max-width:880px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:10px 14px; }
+    .grid3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px 14px; }
+    table { border-collapse:collapse; width:100%; max-width:880px; table-layout:fixed; margin-top:12px; background:#fff; }
+    th,td { border:1px solid #999; padding:10px; text-align:center; font-size:18px; }
+    input, select, textarea { font-family: inherit; font-size:18px; }
+    input { width:100%; box-sizing:border-box; font-size:17px; height:34px; padding:5px 8px; }
+    input[disabled] { background:#eaeaea; }
+    button { margin-top:12px; margin-right:10px; padding:10px 18px; font-family:inherit; font-size:16px; cursor:pointer; }
+    small { color:#444; }
+    .muted { color:#666; }
+
+    .unitCenterCb { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+    .unitCenterCb input { margin:0; vertical-align:middle; }
+    .unitRightText { position:absolute; top:50%; left:50%; transform:translate(14px,-50%); white-space:nowrap; }
+
+    @media (max-width: 720px) {
+      .grid2, .grid3 { grid-template-columns:1fr; }
+      .red label { width:100%; }
+      .red select { width:100%; }
+    }
+
+    #tblLista{
+  display:none;
+}
+  </style>
+</head>
+<body>
+
+<h2>Transformacija i konverzija koordinata</h2>
+
+<div class="card">
+  <div class="red">
+    <label for="datumIn">Ulazni datum:</label>
+    <select id="datumIn">
+        <option value="" selected disabled hidden>Odaberite</option>
+      <option value="dks1901">DKS1901 (Bessel 1841)</option>
+      <option value="bh_etrs89">BH_ETRS89 (GRS80)</option>
+    </select>
+  </div>
+
+  <div class="red">
+    <label for="tipIn">Ulazne koordinate:</label>
+    <select id="tipIn">
+      <option value="" selected disabled hidden>Odaberite</option>
+            <option value="cart">Prostorne (Kartezijeve) koordinate (X, Y, Z)</option>
+      <option value="geo_dms">Geodetske (DMS) koordinate (φ, λ, h)</option>
+      <option value="geo_deg">Geodetske (decimalne) koordinate (φ, λ, h)</option>
+<option value="plane_reduced">Reducirane ravninske koordinate</option>
+<option value="plane_nonreduced">Nereducirane ravninske koordinate</option>
+    </select>
+  </div>
+
+    <div class="red">
+    <label for="datumOut">Izlazni datum:</label>
+    <select id="datumOut">
+        <option value="" selected disabled hidden>Odaberite</option>
+      <option value="dks1901">DKS1901 (Bessel 1841)</option>
+      <option value="bh_etrs89">BH_ETRS89 (GRS80)</option>
+    </select>
+  </div>
+
+  <div class="red">
+    <label for="tipOut">Izlazne koordinate:</label>
+    <select id="tipOut">
+      <option value="" selected disabled hidden>Odaberite</option>
+            <option value="cart">Prostorne (Kartezijeve) koordinate (X, Y, Z)</option>
+                  <option value="geo_dms">Geodetske (DMS) koordinate (φ, λ, h)</option>
+      <option value="geo_deg">Geodetske (decimalne) koordinate (φ, λ, h)</option>
+<option value="plane_reduced">Reducirane ravninske koordinate</option>
+<option value="plane_nonreduced">Nereducirane ravninske koordinate</option>
+    </select>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Točka</th>
+        <th id="ul1"></th>
+        <th id="ul2"></th>
+        <th id="ul3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="text" id="tocka" placeholder="npr. T1"></td>
+        <td><input type="text" id="u1"></td>
+        <td><input type="text" id="u2"></td>
+        <td><input type="text" id="u3"></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Točka</th>
+        <th id="iz1"></th>
+        <th id="iz2"></th>
+        <th id="iz3"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><input type="text" id="oName" disabled></td>
+        <td><input type="text" id="o1" disabled></td>
+        <td><input type="text" id="o2" disabled></td>
+        <td><input type="text" id="o3" disabled></td>
+      </tr>
+    </tbody>
+  </table>
+
+  
+  <!-- LISTA UNESENIH TOČAKA -->
+<table id="tblLista">
+  <thead>
+    <tr>
+      <th>Točka</th>
+      <th id="l1"></th>
+      <th id="l2"></th>
+      <th id="l3"></th>
+    </tr>
+  </thead>
+  <tbody id="listaBody"></tbody>
+</table>
+
+<button onclick="run()" title="Prikaži rezultat koordinatne operacije za unesenu/unesene točku/točke">
+  Izračunaj
+</button>
+
+<button onclick="uvozi()" title="Uvezi točke iz TXT ili CSV datoteke">
+  Uvezi
+</button>
+
+<button onclick="izvezi()" title="Izvezi sve izračunate točke u TXT datoteku">
+  Izvezi
+</button>
+
+<button onclick="ocisti()" title="Obriši trenutni unos iz forme">
+  Očisti
+</button>
+
+<button onclick="izbrisiSve()" title="Obriši sve spremljene zapise i resetiraj postavke">
+  Izbriši sve
+</button>
+
+<input type="file" id="fileInput" accept=".txt,.csv" style="display:none">
+<input type="file" id="helmertFileInput" accept=".txt,.csv" style="display:none">
+  <div class="muted" style="margin-top:8px">
+  </div>
+</div>
+
+<div class="card" id="helmertCard" style="margin-top:14px">  <div class="red" style="margin-top:0">
+    <label>Transformacijski parametri:</label>
+<div style="display:flex; align-items:center; gap:10px; margin-left:auto;">
+  <button class="btn" id="btnImportHelmert" type="button">Uvezi transformacijske parametre</button>      
+<button class="btn" id="btnFlipHelmert" type="button">Promijeni smjer transformacije</button>
+    </div>
+  </div>
+
+  <div class="grid3">
+    <div>
+      <label>Tx [m]</label>
+      <input id="pTx" type="text">
+    </div>
+    <div>
+      <label>Ty [m]</label>
+      <input id="pTy" type="text">
+    </div>
+    <div>
+      <label>Tz [m]</label>
+      <input id="pTz" type="text">
+    </div>
+  </div>
+  <div class="grid3" style="margin-top:10px">
+    <div>
+      <label id="labRx" style="display:block; position:relative; white-space:nowrap; height:1.2em;"><span id="labRxMain">Rx ["]</span><span class="unitCenterCb"><input type="checkbox" id="rotCbRx" class="unitCbRot" style="margin:0; vertical-align:middle;"></span><span id="rotHintRx" class="muted unitRightText">Rx [rad.]</span></label>
+      <input id="pRx" type="text">
+    </div>
+    <div>
+      <label id="labRy" style="display:block; position:relative; white-space:nowrap; height:1.2em;"><span id="labRyMain">Ry ["]</span><span class="unitCenterCb"><input type="checkbox" id="rotCbRy" class="unitCbRot" style="margin:0; vertical-align:middle;"></span><span id="rotHintRy" class="muted unitRightText">Ry [rad.]</span></label>
+      <input id="pRy" type="text">
+    </div>
+    <div>
+      <label id="labRz" style="display:block; position:relative; white-space:nowrap; height:1.2em;"><span id="labRzMain">Rz ["]</span><span class="unitCenterCb"><input type="checkbox" id="rotCbRz" class="unitCbRot" style="margin:0; vertical-align:middle;"></span><span id="rotHintRz" class="muted unitRightText">Rz [rad.]</span></label>
+      <input id="pRz" type="text">
+    </div>
+  </div>
+
+  <div class="grid3" style="margin-top:10px">
+    <div></div>
+    <div>
+      <label id="labDM" style="display:block; position:relative; white-space:nowrap; height:1.2em;"><span id="labDMMain">dM [ppm]</span><span class="unitCenterCb"><input type="checkbox" name="dmUnit" id="dmUnitM" style="margin:0; vertical-align:middle;"></span><span id="dmHint" class="muted unitRightText">dM [m]</span></label>
+      <input id="pS" type="text">
+    </div>
+    <div></div>
+  </div>
+
+  <div id="helmertExtra" style="margin-top:10px"></div>
+</div>
+</div>
+
+<script>
+let izbrisiSveKlikCounter = 0;
+let postavkeZakljucane = false;
+let prethodnaVrijednost = {};
+let blockAutoRun = false;
+  let GEOID = null;
+
+
+function getHeightAnomaly(phi, lambda){
+
+  const data = window.HEIGHT_ANOMALY;
+  if(!data) return 0;
+
+  const latKeys = [];
+  const lonKeys = [];
+
+  // parsiraj sve ključeve jednom
+  for(const k in data){
+    const [la,lo] = k.split("|").map(Number);
+    latKeys.push(la);
+    lonKeys.push(lo);
+  }
+
+  // pronađi 2 najbliža lat i lon
+  latKeys.sort((a,b)=>a-b);
+  lonKeys.sort((a,b)=>a-b);
+
+  function bounds(arr,val){
+    let low = arr[0], high = arr[arr.length-1];
+    for(let i=0;i<arr.length;i++){
+      if(arr[i]<=val) low = arr[i];
+      if(arr[i]>=val){ high = arr[i]; break; }
+    }
+    return [low,high];
+  }
+
+  const [lat0,lat1] = bounds(latKeys,phi);
+  const [lon0,lon1] = bounds(lonKeys,lambda);
+
+  function key(a,b){ return a.toFixed(4)+"|"+b.toFixed(4); }
+
+  const z00 = data[key(lat0,lon0)];
+  const z10 = data[key(lat1,lon0)];
+  const z01 = data[key(lat0,lon1)];
+  const z11 = data[key(lat1,lon1)];
+
+  // ako nešto fali — uzmi NAJBLIŽU vrijednost (nikad 0)
+  if(z00===undefined && z10===undefined && z01===undefined && z11===undefined){
+    // fallback: pronađi najbliži ključ u datasetu
+    let best=null,dist=1e99;
+    for(const k in data){
+      const [la,lo]=k.split("|").map(Number);
+      const d = Math.hypot(phi-la, lambda-lo);
+      if(d<dist){ dist=d; best=data[k]; }
+    }
+    return best ?? 0;
+  }
+
+  // bilinear
+  const t = (phi-lat0)/(lat1-lat0 || 1);
+  const u = (lambda-lon0)/(lon1-lon0 || 1);
+
+  return (1-t)*(1-u)*(z00??z10??z01??z11) +
+         t*(1-u)*(z10??z00??z01??z11) +
+         (1-t)*u*(z01??z00??z10??z11) +
+         t*u*(z11??z00??z01??z10);
+}
+/* ===========================
+   POMOĆNE FUNKCIJE
+=========================== */
+
+function fixedNoRound(raw, dec = 10){
+  let s = String(raw ?? "").trim().replace(/\s+/g,"").replace(/,/g,".");
+  if (s === "") s = "0";
+
+  let sign = "";
+  if (s[0] === "-" || s[0] === "+"){
+    if (s[0] === "-") sign = "-";
+    s = s.slice(1);
+  }
+
+  // dopusti samo brojeve i jednu točku
+  if (!/^\d*(\.\d*)?$/.test(s)) return "";
+
+  let [i, f=""] = s.split(".");
+  if (i === "") i = "0";
+
+  // bez roundinga: samo truncate ili pad
+  if (f.length > dec) f = f.slice(0, dec);
+  else f = f.padEnd(dec, "0");
+
+  return sign + i + "." + f;
+}
+
+function num(x) {
+  if (x === null || x === undefined) return NaN;
+  // prihvati i točku i zarez, ignoriraj razmake
+  const s = String(x).trim().replace(/\s+/g, "").replace(/,/g, ".");
+  if (s === "") return NaN;
+  const v = Number(s);
+  return Number.isFinite(v) ? v : NaN;
+}
+function deg2rad(d){ return d * Math.PI/180; }
+function rad2deg(r){ return r * 180/Math.PI; }
+function arcsec2rad(sec){ return (sec/3600) * Math.PI/180; }
+
+function dmsToDecimal(input) {
+  // Podržani DMS formati:
+  // 1) "DDMMSS.sss" (npr. 445150.739552 ili 090817.18181)
+  //    - prva 2 znaka: stupnjevi (DD)
+  //    - sljedeća 2: minute (MM)
+  //    - sljedeća 2: sekunde (SS)
+  //    - dio iza točke: decimalni dio sekunde
+  // 2) Klasični DMS s razmacima/simbolima (npr. 44 51 50.739552 ili 44° 51′ 50.739552″)
+  if (input === null || input === undefined) return NaN;
+  let s = String(input).trim();
+  if (s === "") return NaN;
+
+  // normalizacija decimalnog zareza
+  s = s.replace(",", ".");
+
+  // pokušaj 1: strogi "DDMMSS(.sss)" uz opcionalni predznak
+  // npr: 445150.739552, 090817.18181, -445150.7
+  let m = s.match(/^([+-]?)(\d{6})(?:\.(\d+))?$/);
+  if (m) {
+    const sign = m[1] === "-" ? -1 : 1;
+    const digits = m[2];
+    const frac = m[3] ? ("0." + m[3]) : "0";
+    const D = Number(digits.slice(0, 2));
+    const M = Number(digits.slice(2, 4));
+    const S0 = Number(digits.slice(4, 6));
+    const S = S0 + Number(frac);
+    if (!(M >= 0 && M < 60) || !(S >= 0 && S < 60)) return NaN;
+    return sign * (D + M / 60 + S / 3600);
+  }
+
+  // fallback: klasični DMS s razmacima / simbolima
+  s = s.replace(/[°′″]/g, " ").trim();
+  const parts = s.split(/\s+/).filter(Boolean).map(Number);
+  if (parts.length === 1) return parts[0];
+  if (parts.length === 2) return parts[0] + parts[1] / 60;
+  if (parts.length >= 3) return parts[0] + parts[1] / 60 + parts[2] / 3600;
+  return NaN;
+}
+
+function decimalToDMS(deg, secDec = 2) {
+
+  if (!Number.isFinite(deg)) return "";
+
+  const sign = deg < 0 ? "-" : "";
+  deg = Math.abs(deg);
+
+  const D = Math.floor(deg);
+  const minFloat = (deg - D) * 60;
+  const M = Math.floor(minFloat);
+  const S = (minFloat - M) * 60;
+
+  const sStr = S.toFixed(secDec);
+
+  // 👉 FORMAT KOJI TRAŽIŠ
+  return `${sign}${D}° ${M}' ${sStr}''`;
+}
+function fmt(v, dec=10){
+  if (!Number.isFinite(v)) return "";
+
+  // ukloni floating noise (1e-12 je dovoljno strogo)
+  const cleaned = Math.abs(v) < 1e-12 ? 0 : Number(v.toFixed(12));
+
+  return cleaned.toFixed(10);
+}
+function decCount(raw){
+  if (raw === null || raw === undefined) return 0;
+  const s = String(raw).trim().replace(",", ".");
+  const i = s.indexOf(".");
+  return i === -1 ? 0 : Math.max(0, s.length - i - 1);
+}
+function clampInt(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+function getPrecisionPolicy(){
+  const din = document.getElementById("datumIn").value;
+  const dout = document.getElementById("datumOut").value;
+  const tipIn = document.getElementById("tipIn").value;
+  const tipOut = document.getElementById("tipOut").value;
+  const u1 = document.getElementById("u1").value;
+  const u2 = document.getElementById("u2").value;
+  const u3 = document.getElementById("u3").value;
+
+  // Ako su različiti sustavi (datum), traži se 4 decimale
+  if (din !== dout){
+    return {d1:4, d2:4, d3:4, dmsSecDec:4};
+  }
+
+  // Inače: preciznost izlaza prati preciznost unosa (po komponentama)
+  const d1 = clampInt(decCount(u1), 0, 12);
+  const d2 = clampInt(decCount(u2), 0, 12);
+  const d3 = clampInt(decCount(u3), 0, 12);
+
+  // Za DMS (spakirani format): koristimo broj decimala sekundi iz odgovarajućeg ulaza,
+  // ali ako ulaz nije DMS, ostavi razumno (6).
+  let dmsSecDec = 6;
+  if (tipIn === "geo_dms"){
+    dmsSecDec = clampInt(decCount(u1), 0, 12);
+  }
+  return {d1, d2, d3, dmsSecDec};
+}
+
+/* ===========================
+   DATUMI, ELIPSOIDI, PRESETE
+=========================== */
+const ELLIPSOIDS = {
+  bessel1841: { a: 6377397.155, f: 1/299.1528128 },
+  grs80: { a: 6378137.0, f: 1/298.257222101 }
+};
+
+const DATUMS = {
+  dks1901: { ell: "bessel1841", m0: 0.9999, falseE: 500000.0, lam0_deg: 18.0 },
+  bh_etrs89: { ell: "grs80", m0: 0.9999, falseE: 500000.0, lam0_deg: 18.0 }
+};
+
+// Preseci iz rada: Tablica 7.3 (DKS->ETRS) i službeni iz Tablice 7.6 (ETRS->DKS)
+const HELMERT_PRESETS = {
+  "dks1901->bh_etrs89": { Tx: 222.62591, Ty: 329.16726, Tz: 722.99587, ppm: 4.5648, Rx: -7.95872, Ry: -14.99090, Rz: 17.45541 },
+  "bh_etrs89->dks1901": { Tx: 230.33900, Ty: 339.15600, Tz: 714.02200, ppm: 4.3397, Rx: -8.20087, Ry: -14.60299, Rz: 17.66412 }
+};
+
+/* ===========================
+   GEOMETRIJA ELIPSOIDA
+=========================== */
+function ellDerived(ell) {
+  const a = ell.a;
+  const f = ell.f;
+  const b = a * (1 - f);
+  const e2 = (a*a - b*b)/(a*a);        // (5.1) ekvivalent
+  const ep2 = (a*a - b*b)/(b*b);       // (5.8) e'2
+  const n = (a - b)/(a + b);
+  return {a,f,b,e2,ep2,n};
+}
+function radiusPrimeVertical(a, e2, phiRad){ // (5.2)
+  const s = Math.sin(phiRad);
+  return a / Math.sqrt(1 - e2*s*s);
+}
+
+/* ===========================
+   GEODETSKE <-> KARTEZIJEVE
+=========================== */
+function geodeticToCartesian(phiRad, lamRad, h, ell){ // (5.3) + (5.2) + (5.1)
+  const {a,e2} = ellDerived(ell);
+  const N = radiusPrimeVertical(a,e2,phiRad);
+  const cosPhi = Math.cos(phiRad), sinPhi = Math.sin(phiRad);
+  const cosLam = Math.cos(lamRad), sinLam = Math.sin(lamRad);
+  const X = (N + h) * cosPhi * cosLam;
+  const Y = (N + h) * cosPhi * sinLam;
+  const Z = ((1 - e2)*N + h) * sinPhi;
+  return {X,Y,Z};
+}
+
+function cartesianToGeodeticIter(X,Y,Z,ell){
+  // λ po (5.4): koristimo atan2
+  const {a,b,e2} = ellDerived(ell);
+  const lam = Math.atan2(Y, X);
+  const p = Math.sqrt(X*X + Y*Y);
+
+  // Hirvonen–Moritz: (5.5) + (5.6) iterativno
+  let N = 1.0;
+  let h = 0.0;
+  let phi = Math.atan2(Z, p*(1 - e2*N/(N+h))); // prva iteracija (uz N=1,h=0)
+
+  for (let k=0; k<10; k++){
+    const Nnew = radiusPrimeVertical(a,e2,phi);
+    const hnew = (p/Math.cos(phi)) - Nnew; // (5.6)
+    const phinew = Math.atan2(Z, p*(1 - e2*Nnew/(Nnew + hnew))); // (5.5)
+    if (Math.abs(phinew-phi) < 1e-13 && Math.abs(hnew-h) < 1e-7) { phi = phinew; h = hnew; N = Nnew; break; }
+    phi = phinew; h = hnew; N = Nnew;
+  }
+  return {phi, lam, h};
+}
+
+/* ===========================
+   RAVNINSKE: REDUCIRANE <-> NEREDUCIRANE
+   (3.1)-(3.2) i (4.5)-(4.6) su istog oblika
+=========================== */
+function reducedToNonreduced(N,E,m0,falseE){
+  // (4.5) / (3.1)
+  const Nhat = N / m0;
+  const Ehat = (E - falseE) / m0;
+  return {Nhat, Ehat};
+}
+function nonreducedToReduced(Nhat,Ehat,m0,falseE){
+  // (4.6) / (3.2)
+  const N = Nhat * m0;
+  const E = Ehat * m0 + falseE;
+  return {N, E};
+}
+
+/* ===========================
+   RAVNINSKE <-> GEODETSKE (TM/GK serije)
+   (5.9)-(5.22), (5.16)-(5.17)
+=========================== */
+function planeNonreducedToGeodetic(Nhat,Ehat,ell,lam0){
+  const {a,b,e2,ep2,n} = ellDerived(ell);
+
+  // (5.11) α̂ β̂ γ̂ δ̂ ε̅
+  const ahat = (a+b)/2 * (1 + (n*n)/4 + (n**4)/64);
+  const bhat = (3*n)/2 - (27*n**3)/32 + (269*n**5)/512;
+  const ghat = (21*n*n)/16 - (55*n**4)/32;
+  const dhat = (151*n**3)/96 - (417*n**5)/128;
+  const ehat = (1097*n**4)/512;
+
+  // (5.10) φ0
+  const u = Nhat/ahat;
+  const phi0 = u + bhat*Math.sin(2*u) + ghat*Math.sin(4*u) + dhat*Math.sin(6*u) + ehat*Math.sin(8*u);
+
+  // (5.13): N, t, η2 na φ0
+  const N0 = radiusPrimeVertical(a,e2,phi0);
+  const t = Math.tan(phi0);
+  const eta2 = ep2 * (Math.cos(phi0)**2);
+
+  // (5.12): f1..f4
+  const f1 = - t*(1+eta2)/(2*N0**2);
+  const f2 = (t/(24*N0**4)) * (5 + 3*t*t + 6*eta2 - 3*eta2**2 - 4*eta2**3 - 6*eta2*t*t - 9*eta2**2*t*t);
+  const f3 = - (t/(720*N0**6)) * (61 + 90*t*t + 45*t**4 + 107*eta2 + 43*eta2**2 - 162*eta2*t*t - 318*eta2**2*t*t - 45*eta2*t**4 + 135*eta2**2*t**4);
+  const f4 = (t/(40320*N0**8)) * (1385 + 3633*t*t + 4095*t**4 + 1575*t**6 + 3116*eta2 - 5748*eta2*t*t - 3276*eta2*t**4 - 1260*eta2*t**6);
+
+  // (5.9): φ
+  const phi = phi0 + f1*(Ehat**2) + f2*(Ehat**4) + f3*(Ehat**6) + f4*(Ehat**8);
+
+  // (5.15): l1..l5 (koristi φ0, N0, t, eta2)
+  const l1 = 1/(N0*Math.cos(phi0));
+  const l2 = -(1/(6*N0**3*Math.cos(phi0))) * (1 + 2*t*t + eta2);
+  const l3 = (1/(120*N0**5*Math.cos(phi0))) * (5 + 28*t*t + 24*t**4 + 6*eta2 - 3*eta2**2 - 4*eta2**3 + 8*t*t*eta2 + 4*t*t*eta2**2 + 24*t**4*eta2**3);
+  const l4 = -(1/(5040*N0**7*Math.cos(phi0))) * (61 + 662*t*t + 1320*t**4 + 720*t**6 + 107*eta2**2 + 440*t*t*eta2 - 234*t*t*eta2**2 + 336*t**4*eta2);
+  const l5 = (1/(362880*N0**9*Math.cos(phi0))) * (1385 + 24568*t*t + 83664*t**4 + 100800*t**6 + 40320*t**8 + 47808*eta2*t**4);
+
+  // (5.14): λ
+  const lam = lam0 + l1*Ehat + l2*(Ehat**3) + l3*(Ehat**5) + l4*(Ehat**7) + l5*(Ehat**9);
+
+  return {phi, lam};
+}
+
+function meridianArcHelmert(phi, ell){
+  const {a,b,n} = ellDerived(ell);
+  const alpha = (a+b)/2 * (1 + (n*n)/4 + (n**4)/64); // (5.21)
+  const beta  = -(3*n)/2 + (9*n**3)/16 + (3*n**5)/32;
+  const gamma = (15*n*n)/16 - (15*n**4)/32;
+  const delta = -(35*n**3)/48 + (105*n**5)/256;
+  const eps   = (315*n**4)/512;
+  // (5.20)
+  return alpha * (phi + beta*Math.sin(2*phi) + gamma*Math.sin(4*phi) + delta*Math.sin(6*phi) + eps*Math.sin(8*phi));
+}
+
+function geodeticToPlaneNonreduced(phi, lam, ell, lam0){
+  const {a,e2,ep2} = ellDerived(ell);
+  const N = radiusPrimeVertical(a,e2,phi);
+  const t = Math.tan(phi);
+  const eta2 = ep2 * (Math.cos(phi)**2);
+  const l = lam - lam0; // (5.17)
+
+  // (5.18): e1..e5
+  const e1 = N*Math.cos(phi);
+  const e2c = (N*(Math.cos(phi)**3)/6) * (1 - t*t + eta2);
+  const e3 = (N*(Math.cos(phi)**5)/120) * (5 - 18*t*t + t**4 + 14*eta2 + 13*eta2**2 + 4*eta2**3 - 58*t*t*eta2 - 64*t*t*eta2**2 - 24*t*t*eta2**3);
+  const e4 = (N*(Math.cos(phi)**7)/5040) * (61 - 479*t*t + 179*t**4 - t**6 + 331*eta2 + 715*eta2**2 - 3298*t*t*eta2 - 8655*t*t*eta2**2 - 10964*t*t*eta2**3 + 1771*t**4*eta2 + 6080*t**4*eta2**2);
+  const e5 = (N*(Math.cos(phi)**9)/362880) * (1385 - 19028*t*t + 18270*t**4 - 1636*t**6 + 12284*eta2 - 214140*eta2*t*t + 290868*eta2*t**4 - 47188*eta2*t**6);
+
+  // (5.16): Ê
+  const Ehat = e1*l + e2c*(l**3) + e3*(l**5) + e4*(l**7) + e5*(l**9);
+
+  // (5.22): n1..n4
+  const n1 = (N*(Math.cos(phi)**2)/2) * t;
+  const n2 = (N*(Math.cos(phi)**4)/24) * t * (5 - t*t + 9*eta2 + 4*eta2**2);
+  const n3 = (N*(Math.cos(phi)**6)/720) * t * (61 - 58*t*t + t**4 + 270*eta2 + 445*eta2**2 + 324*eta2**3 - 330*t*t*eta2 - 680*t*t*eta2**2 - 600*t*t*eta2**3);
+  const n4 = (N*(Math.cos(phi)**8)/40320) * t * (1385 - 3111*t*t + 543*t**4 - t**6 + 10899*eta2 + 34419*eta2**2 - 32802*eta2*t*t - 129087*eta2**2*t*t + 9219*eta2*t**4 + 49644*eta2**2*t**4);
+
+  // (5.19): Ň
+  const Nhat = meridianArcHelmert(phi, ell) + n1*(l**2) + n2*(l**4) + n3*(l**6) + n4*(l**8);
+
+  return {Nhat, Ehat};
+}
+
+/* ===========================
+   HELMERT (5.25)-(5.26)
+=========================== */
+function rotMatrixStrict(rx, ry, rz){
+  // ulaz u radijanima, R = R1*R2*R3 po (5.25)
+  const cos = Math.cos, sin = Math.sin;
+  const c1 = cos(rx), s1 = sin(rx);
+  const c2 = cos(ry), s2 = sin(ry);
+  const c3 = cos(rz), s3 = sin(rz);
+
+  return [
+    [ c2*c3,            c2*s3,           -s2 ],
+    [ s1*s2*c3 - c1*s3, s1*s2*s3 + c1*c3, s1*c2 ],
+    [ c1*s2*c3 + s1*s3, c1*s2*s3 - s1*c3, c1*c2 ]
+  ];
+}
+function matVec(M,v){
+  return [
+    M[0][0]*v[0] + M[0][1]*v[1] + M[0][2]*v[2],
+    M[1][0]*v[0] + M[1][1]*v[1] + M[1][2]*v[2],
+    M[2][0]*v[0] + M[2][1]*v[1] + M[2][2]*v[2]
+  ];
+}
+function helmertStrictXYZ(X,Y,Z, params){
+  const rx = (params.rotUnit === "rad") ? params.Rx : arcsec2rad(params.Rx);
+  const ry = (params.rotUnit === "rad") ? params.Ry : arcsec2rad(params.Ry);
+  const rz = (params.rotUnit === "rad") ? params.Rz : arcsec2rad(params.Rz);
+
+  const R = rotMatrixStrict(rx,ry,rz);
+  const v = [X,Y,Z];
+  const Rv = matVec(R,v);
+
+  const dM = params.ppm * 1e-6; // ppm -> bezdimenz.
+  const k = 1 + dM;
+  // (5.26): X' = T + (1 + dM) * (R * X)
+  return {
+    X: params.Tx + k*Rv[0],
+    Y: params.Ty + k*Rv[1],
+    Z: params.Tz + k*Rv[2]
+  };
+}
+
+/* ===========================
+   UI
+=========================== */
+/* ===========================
+   UI
+=========================== */
+let tockeMap = new Map();
+let tockeCounter = 0;
+
+let uvezeneTocke = [];
+
+function overbar(s){ 
+  // Ē i N̄ (kombinirajući macron) radi i u <option>
+  return s + "\u0304";
+}
+
+function updateTipOptionText(selectId, datum){
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+
+  const optRed = sel.querySelector('option[value="plane_reduced"]');
+  const optNon = sel.querySelector('option[value="plane_nonreduced"]');
+  if (!optRed || !optNon) return;
+
+  if (datum === "dks1901"){
+    // DKS1901: reducirane = y,x ; nereducirane = Ē,N̄
+    optRed.textContent = "Reducirane ravninske koordinate (y, x, H)";
+    optNon.textContent = `Nereducirane ravninske koordinate (ȳ, x̄, H)`;
+  } else {
+    // BH_ETRS89: nereducirane = E,N ; reducirane = Ê,Ň
+    optRed.textContent = "Reducirane ravninske koordinate (E, N, H)";
+    optNon.textContent = "Nereducirane ravninske koordinate (Ē, N̄, H)";
+  }
+}
+
+function yBar(){ return "ȳ"; }   // ȳ
+function xBar(){ return "x̄"; }   // x̄
+function EBar(){ return "Ē"; }   // Ē
+function NBar(){ return "N̄"; }   // N̄
+
+function escapeHtml(s){
+  return String(s ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[ch]));
+}
+
+function syncListaZaglavlja(){
+  const a = document.getElementById("ul1")?.textContent || "";
+  const b = document.getElementById("ul2")?.textContent || "";
+  const c = document.getElementById("ul3")?.textContent || "";
+  const l1 = document.getElementById("l1");
+  const l2 = document.getElementById("l2");
+  const l3 = document.getElementById("l3");
+  if(l1) l1.textContent = a;
+  if(l2) l2.textContent = b;
+  if(l3) l3.textContent = c;
+}
+
+function renderLista(){
+  const body = document.getElementById("listaBody");
+  if(!body) return;
+
+  const arr = Array.from(tockeMap.values()).sort((p,q)=>p.idx-q.idx);
+  body.innerHTML = arr.map(p => `
+    <tr>
+      <td>${escapeHtml(p.oznaka)}</td>
+      <td>${escapeHtml(p.u1 ?? "")}</td>
+      <td>${escapeHtml(p.u2 ?? "")}</td>
+      <td>${escapeHtml(p.u3 ?? "")}</td>
+    </tr>
+  `).join("");
+}
+
+function upsertTrenutniUnos(){
+  const datumIn  = document.getElementById("datumIn").value;
+  const tipIn    = document.getElementById("tipIn").value;
+  if(!datumIn || !tipIn) return;
+
+  const oznaka = document.getElementById("tocka").value.trim();
+  const u1 = document.getElementById("u1").value.trim();
+  const u2 = document.getElementById("u2").value.trim();
+  const u3 = document.getElementById("u3").value.trim();
+
+if(!oznaka || !u1 || !u2 || !u3) return;
+  const existing = tockeMap.get(oznaka);
+  const idx = existing ? existing.idx : (++tockeCounter);
+
+  tockeMap.set(oznaka, { oznaka, u1, u2, u3, idx });
+  renderLista();
+}
+
+function hookAutoUpsert(){
+  ["tocka","u1","u2","u3"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener("change", upsertTrenutniUnos);
+    el.addEventListener("blur", upsertTrenutniUnos);
+    el.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") upsertTrenutniUnos();
+    });
+  });
+}
+
+function azurirajZaglavlja(){
+  
+  const tipIn = document.getElementById("tipIn").value;
+  const tipOut = document.getElementById("tipOut").value;
+
+  const ul1 = document.getElementById("ul1");
+  const ul2 = document.getElementById("ul2");
+  const ul3 = document.getElementById("ul3");
+
+  const iz1 = document.getElementById("iz1");
+  const iz2 = document.getElementById("iz2");
+  const iz3 = document.getElementById("iz3");
+
+  const datumIn = document.getElementById("datumIn").value;
+  const datumOut = document.getElementById("datumOut").value;
+  updateTipOptionText("tipIn", datumIn);
+updateTipOptionText("tipOut", datumOut);
+
+function setHdr(tip, h1, h2, h3, datum){
+
+  if (tip === "geo_deg" || tip === "geo_dms"){
+    h1.textContent="φ";
+    h2.textContent="λ";
+    h3.textContent="h";
+  }
+
+  else if (tip === "cart"){
+    h1.textContent="X";
+    h2.textContent="Y";
+    h3.textContent="Z";
+  }
+
+  else if (tip === "plane_reduced"){
+    if (datum === "dks1901"){
+      h1.textContent="y";
+      h2.textContent="x";
+    } else {
+      h1.textContent="E";
+      h2.textContent="N";
+    }
+    h3.textContent="H";
+  }
+
+  else if (tip === "plane_nonreduced"){
+    if (datum === "dks1901"){
+      h1.textContent="ȳ";
+      h2.textContent="x̄";
+    } else {
+      h1.textContent="Ē";
+      h2.textContent="N̄";
+    }
+    h3.textContent="H";
+  }
+}
+setHdr(tipIn, ul1, ul2, ul3, datumIn);
+setHdr(tipOut, iz1, iz2, iz3, datumOut);
+
+  // Placeholderi za unos
+  const in1 = document.getElementById("u1");
+  const in2 = document.getElementById("u2");
+  const in3 = document.getElementById("u3");
+  if (tipIn === "geo_dms"){
+    in1.placeholder = "432659,4639 ili 432659.4639";
+    in2.placeholder = "171249,8639 ili 171249.8639";
+    in3.placeholder = "393,19 ili 393.19";
+  } else if (tipIn === "geo_deg"){
+    in1.placeholder = "43,45 ili 43.45";
+    in2.placeholder = "17,21 ili 17.21";
+    in3.placeholder = "393,19 ili 393.19";
+  } else if (tipIn === "cart"){
+    in1.placeholder = "4430260,24 ili 4430260.24";
+    in2.placeholder = "1372568,25 ili 1372568.25";
+    in3.placeholder = "4364188,88 ili 4364188.88";
+  } else if (tipIn === "plane_reduced" || tipIn === "plane_nonreduced") {
+    if (datumIn === "dks1901") {
+      if (tipIn === "plane_reduced") {
+        // DKS1901 reducirane: y, x
+        in1.placeholder = "6480000.93 ili 6480000,93";
+        in2.placeholder = "4800000.19 ili 4800000,19";
+      } else {
+        // DKS1901 nereducirane: ȳ, x̄  (ili po tvojoj logici Ē,N̄)
+        in1.placeholder = "-20001.07 ili -20001,07";   // ȳ
+        in2.placeholder = "4800480.05 ili 4800480.05";   // x̄
+      }
+    } else {
+      // BH_ETRS89
+      if (tipIn === "plane_reduced") {
+        // BH_ETRS89 reducirane: Ê, Ň
+        in1.placeholder = "480000.93 ili 480000,93";
+        in2.placeholder = "4800000.19 ili 4800000,19";
+      } else {
+        // BH_ETRS89 nereducirane: E, N
+        in1.placeholder = "-20001.07 ili -20001,07";
+        in2.placeholder = "4800480.05 ili 4800480.05";
+      }
+    }
+    in3.placeholder = "393.19 ili 393,19 ili 0";
+  } else {
+    in1.placeholder = "";
+    in2.placeholder = "";
+    in3.placeholder = "";
+  }
+
+  syncListaZaglavlja();
+renderLista();
+}
+
+function updateHelmertUnitLabels(){
+  const rotIsRad = !!document.getElementById("rotCbRx")?.checked;
+  const dmIsM    = !!document.getElementById("dmUnitM")?.checked;
+
+  // Glavne oznake
+  const labRxMain = document.getElementById("labRxMain");
+  const labRyMain = document.getElementById("labRyMain");
+  const labRzMain = document.getElementById("labRzMain");
+  if (labRxMain) labRxMain.textContent = rotIsRad ? "Rx [rad.]" : "Rx [″]";
+  if (labRyMain) labRyMain.textContent = rotIsRad ? "Ry [rad.]" : "Ry [″]";
+  if (labRzMain) labRzMain.textContent = rotIsRad ? "Rz [rad.]" : "Rz [″]";
+
+  // Desne oznake (alternativa)
+  const rotHintRx = document.getElementById("rotHintRx");
+  const rotHintRy = document.getElementById("rotHintRy");
+  const rotHintRz = document.getElementById("rotHintRz");
+  if (rotHintRx) rotHintRx.textContent = rotIsRad ? "Rx [″]" : "Rx [rad.]";
+  if (rotHintRy) rotHintRy.textContent = rotIsRad ? "Ry [″]" : "Ry [rad.]";
+  if (rotHintRz) rotHintRz.textContent = rotIsRad ? "Rz [″]" : "Rz [rad.]";
+
+  const dmHint = document.getElementById("dmHint");
+  const labDMMain = document.getElementById("labDMMain");
+  if (labDMMain) labDMMain.textContent = dmIsM ? "dM [m]" : "dM [ppm]";
+  if (dmHint) dmHint.textContent = dmIsM ? "dM [ppm]" : "dM [m]";
+}
+
+function onDatumChange(){
+  
+  const din = document.getElementById("datumIn").value;
+  const dout = document.getElementById("datumOut").value;
+
+  // Parametre korisnik sam upisuje: uvijek ih ostavljamo prazne
+  ["pTx","pTy","pTz","pS","pRx","pRy","pRz"].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  ["rotCbRx","rotCbRy","rotCbRz","dmUnitM"].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.checked = false;
+  });
+  updateHelmertUnitLabels();
+// Aktiviraj/zasivi Helmert polja ovisno o tome jesu li datumi različiti
+const enabled = (din && dout && din !== dout);
+// 🔵 Prikaži ili sakrij cijeli Helmert okvir
+const helmCard = document.getElementById("helmertCard");
+if(helmCard){
+  helmCard.style.display = enabled ? "block" : "none";
+}
+  ["pTx","pTy","pTz","pS","pRx","pRy","pRz","rotCbRx","rotCbRy","rotCbRz","dmUnitM"].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.disabled = !enabled;
+  });
+  const btn = document.getElementById("btnFlipHelmert");
+  if (btn) btn.disabled = !enabled;
+
+  // m0 i λ0 se prikazuju radi orijentacije (uzimamo iz izlaznog sustava)
+
+  azurirajZaglavlja();
+}
+
+/* ===========================
+   GLAVNI POSTUPAK
+=========================== */
+function readHelmertParams(){
+  const rotIsRad = !!document.getElementById("rotCbRx")?.checked;
+  const dmIsM    = !!document.getElementById("dmUnitM")?.checked;
+
+  const Tx = num(document.getElementById("pTx").value);
+  const Ty = num(document.getElementById("pTy").value);
+  const Tz = num(document.getElementById("pTz").value);
+
+  // dM: zadano ppm; opcija "m" znači bezdimenzijski faktor (m/m)
+  const dmRaw = num(document.getElementById("pS").value);
+  const ppm = dmIsM ? (dmRaw * 1e6) : dmRaw;
+
+  return {
+    Tx, Ty, Tz,
+    ppm,
+    Rx: num(document.getElementById("pRx").value),
+    Ry: num(document.getElementById("pRy").value),
+    Rz: num(document.getElementById("pRz").value),
+    rotUnit: rotIsRad ? "rad" : "arcsec",
+    dmUnit: dmIsM ? "m" : "ppm"
+  };
+}
+
+function stripZonePrefix(val, datum, tip){
+  let v = num(val);
+
+  // vrijedi samo za DKS1901 reducirane (y,x)
+  if(datum === "dks1901" && tip === "plane_reduced"){
+    // zona 6 → vrijednosti oko 6 000 000
+    if(v > 6000000){
+      v = v - 6000000;
+    }
+  }
+  return v;
+}
+
+function toCartesianFromInput(){
+  const din = document.getElementById("datumIn").value;
+  const tip = document.getElementById("tipIn").value;
+  const ell = ELLIPSOIDS[DATUMS[din].ell];
+  const m0 = DATUMS[din].m0;
+  const falseE = DATUMS[din].falseE;
+  const lam0 = deg2rad(DATUMS[din].lam0_deg);
+
+  const u1 = document.getElementById("u1").value;
+  const u2 = document.getElementById("u2").value;
+  const u3 = document.getElementById("u3").value;
+
+  if (tip === "cart"){
+    const X = num(u1), Y = num(u2), Z = num(u3);
+    return {X,Y,Z};
+  }
+
+if (tip === "geo_deg" || tip === "geo_dms"){
+
+  const phiDeg = (tip==="geo_deg") ? num(u1) : dmsToDecimal(u1);
+  const lamDeg = (tip==="geo_deg") ? num(u2) : dmsToDecimal(u2);
+
+  let h = num(u3);
+  if (!Number.isFinite(h)) h = 0;
+
+  if (!Number.isFinite(phiDeg) || !Number.isFinite(lamDeg)){
+    return {X:NaN, Y:NaN, Z:NaN};
+  }
+
+  const phi = deg2rad(phiDeg);
+  const lam = deg2rad(lamDeg);
+
+  return geodeticToCartesian(phi, lam, h, ell);
+}
+
+  // ravninske -> geodetske -> Kartezijeve
+// --- RAVNINSKE KOORDINATE ---
+
+let y = num(u1);   // easting
+let x = num(u2);   // northing
+let H = num(u3);
+if (!Number.isFinite(H)) H = 0;
+
+// DKS1901 – ukloni zonu 6 (6 500 000)
+if (din === "dks1901" && tip === "plane_reduced"){
+  if (y > 6000000) y = y - 6000000;
+}
+
+let Nhat, Ehat;
+
+if (tip === "plane_reduced"){
+  // reducirane -> nereducirane
+  Nhat = x / m0;
+  Ehat = (y - falseE) / m0;
+} else {
+  // već su nereducirane
+  Nhat = x;
+  Ehat = y;
+}
+  // tip plane_nonreduced: u1=Ň, u2=Ê
+const {phi, lam} = planeNonreducedToGeodetic(Nhat,Ehat,ell,lam0);
+
+const zeta = getHeightAnomaly(rad2deg(phi), rad2deg(lam));
+
+const hEll = H + zeta;   // H → h
+
+return geodeticToCartesian(phi, lam, hEll, ell);
+}
+
+function addZonePrefix(val, datum, tip){
+  let v = val;
+
+  // samo DKS1901 reducirane (y,x)
+  if(datum === "dks1901" && tip === "plane_reduced"){
+    if(v < 1000000){   // znači da nema zone
+      v = v + 6000000;
+    }
+  }
+  return v;
+}
+
+function fromCartesianToOutput(X,Y,Z,prec){
+  const dout = document.getElementById("datumOut").value;
+  const tip = document.getElementById("tipOut").value;
+  const ell = ELLIPSOIDS[DATUMS[dout].ell];
+  const m0 = DATUMS[dout].m0;
+  const falseE = DATUMS[dout].falseE;
+  const lam0 = deg2rad(DATUMS[dout].lam0_deg);
+
+if (tip === "cart"){
+  return {
+    o1: fmt(X, 10),
+    o2: fmt(Y, 10),
+    o3: fmt(Z, 10)
+  };
+}
+  const {phi, lam, h} = cartesianToGeodeticIter(X,Y,Z,ell);
+  // ===== HEIGHT ANOMALY (ζ) =====
+const phiDeg = rad2deg(phi);
+const lamDeg = rad2deg(lam);
+
+const zeta = getHeightAnomaly(phiDeg, lamDeg);
+
+// Samo za ravninske izlaze treba ortometrijska visina H.
+// Za geodetske izlaze vraćamo ellipsoidnu visinu h.
+const H = h - zeta;
+const outH = (tip === "plane_reduced" || tip === "plane_nonreduced") ? H : h;
+
+if (tip === "geo_deg"){
+  return {
+    o1: fmt(rad2deg(phi), 10),
+    o2: fmt(rad2deg(lam), 10),
+    o3: fmt(outH, prec?.d3 ?? 4)   // <-- geo: h, plane: H
+  };
+}
+if (tip === "geo_dms"){
+  return {
+    o1: decimalToDMS(rad2deg(phi), 10),
+    o2: decimalToDMS(rad2deg(lam), 10),
+    o3: fmt(outH, prec?.d3 ?? 4)
+  };
+}
+
+// ===== GEODETSKE -> RAVNINSKE =====
+
+const {Nhat, Ehat} = geodeticToPlaneNonreduced(phi, lam, ell, lam0);
+
+if (tip === "plane_nonreduced"){
+  return {
+    o1: fmt(Ehat, prec?.d1 ?? 4),
+    o2: fmt(Nhat, prec?.d2 ?? 4),
+    o3: fmt(H, prec?.d3 ?? 4)
+  };
+}
+
+if (tip === "plane_reduced"){
+  const {N,E} = nonreducedToReduced(Nhat, Ehat, m0, falseE);
+  let Edisp = addZonePrefix(E, dout, tip);
+
+  return {
+    o1: fmt(Edisp, prec?.d1 ?? 4),
+    o2: fmt(N, prec?.d2 ?? 4),
+    o3: fmt(H, prec?.d3 ?? 4)
+  };
+}
+}
+
+function uvozi(){
+  alert("Dopušteni razdjelnici su točka-zarez, razmak i tabulator.\n(Ako su ulazni podatci u ravnini projekcije te nemate vrijednosti ortometrijske visine, postavite ju na '0'. U suprotnom, uvoz točaka neće biti moguć.)");
+    listaTocaka = [];
+    uvezeneTocke = [];
+  const fi = document.getElementById("fileInput");
+  fi.value="";
+  fi.click();
+
+  fi.onchange = ()=>{
+    const file = fi.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e)=>{
+      const txt = e.target.result;
+
+      const redovi = txt.split(/\r?\n/);
+      uvezeneTocke = [];
+
+      for(const r of redovi){
+        if(!r.trim()) continue;
+
+        // podrška , ili ;
+const parts = r.split(/[;\t ]+/).map(p=>p.trim());
+        const oznaka = (parts[0]||"").trim();
+        const u1 = (parts[1]||"").trim();
+        const u2 = (parts[2]||"").trim();
+        const u3 = (parts[3]||"").trim();
+
+if(!oznaka || !u1 || !u2 || !u3) continue;
+
+        uvezeneTocke.push({
+          oznaka,
+          u1,
+          u2,
+          u3
+        });
+      }
+
+      if(uvezeneTocke.length===0){
+        alert("Nema valjanih zapisa.\nProvjerite koristite li jedan od dopuštenih razdjelnika (točka-zarez, tabulator i razmak) te ima li svaka točka definiran naziv te sve tri koordinate.\nAko su ulazni podatci u ravnini projekcije te nemate vrijednosti ortometrijske visine, postavite ju na '0'");
+        return;
+      }
+
+      // prikaži samo prvu točku u formi
+      const p = uvezeneTocke[0];
+      document.getElementById("tocka").value = p.oznaka;
+      document.getElementById("u1").value = p.u1;
+      document.getElementById("u2").value = p.u2;
+      document.getElementById("u3").value = p.u3;
+
+      alert("Zapis uvezen.\nOdaberite datum i vrstu koordinata zapisa te odredite izlazni datum i vrstu koordinata.");
+    };
+
+    reader.readAsText(file,"UTF-8");
+  };
+}
+
+function uveziHelmertParametre(){
+
+  alert("Dopušteni razdjelnici su točka-zarez, razmak, tabulator i novi red.\nNakon uvoza, provjerite točnost i uskladite mjerne jedinice.");
+
+  const fi = document.getElementById("helmertFileInput");
+  fi.value="";
+  fi.click();
+
+  fi.onchange = ()=> {
+    const file = fi.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = (e)=> {
+      const txt = e.target.result;
+
+      // dopušteno: ; i novi red (CR/LF)
+      const parts = txt
+.split(/[;\s]+/)        
+.map(p => p.trim())
+        .filter(p => p !== "");
+
+      if(parts.length < 7){
+        alert("Datoteka mora sadržavati 7 parametara (Tx, Ty, Tz, Rx, Ry, Rz, dM), razdvojenih s točka-zarezom, razmakom, tabulatorom ili novim redom.");
+        return;
+      }
+
+      document.getElementById("pTx").value = parts[0];
+      document.getElementById("pTy").value = parts[1];
+      document.getElementById("pTz").value = parts[2];
+      document.getElementById("pRx").value = parts[3];
+      document.getElementById("pRy").value = parts[4];
+      document.getElementById("pRz").value = parts[5];
+      document.getElementById("pS").value  = parts[6];
+
+    };
+
+    reader.readAsText(file, "UTF-8");
+  };
+}
+
+function run(){
+
+  const datumIn  = document.getElementById("datumIn").value;
+  const tipIn    = document.getElementById("tipIn").value;
+  const datumOut = document.getElementById("datumOut").value;
+  const tipOut   = document.getElementById("tipOut").value;
+
+  const name = document.getElementById("tocka").value.trim();
+
+  // 🔴 prvo: mora sve biti odabrano
+  if(!datumIn || !tipIn || !datumOut || !tipOut){
+    alert("Odaberite ulazni i izlazni datum te vrstu koordinata.");
+    return;
+  }
+
+const u1 = document.getElementById("u1").value.trim();
+const u2 = document.getElementById("u2").value.trim();
+
+if (!name || !u1 || !u2 || !document.getElementById("u3").value.trim()){
+  alert("Unesite ulazne vrijednosti.");
+  return;
+}
+// 🚫 ISTI DATUM + ISTA VRSTA → ZABRANA
+if(datumIn === datumOut && tipIn === tipOut){
+  // 🔵 SPECIJALNI SLUČAJ: reducirane <-> nereducirane
+if(
+  datumIn === datumOut &&
+  (
+    (tipIn === "plane_reduced" && tipOut === "plane_nonreduced") ||
+    (tipIn === "plane_nonreduced" && tipOut === "plane_reduced")
+  )
+){
+  // koristi samo ravninske formule bez geoidne anomalije
+
+  const m0 = DATUMS[datumIn].m0;
+  const falseE = DATUMS[datumIn].falseE;
+
+  let y = num(document.getElementById("u1").value);
+  let x = num(document.getElementById("u2").value);
+  let H = num(document.getElementById("u3").value);
+  if(!Number.isFinite(H)) H = 0;
+
+  // ukloni zonu ako treba
+  if(datumIn === "dks1901" && tipIn === "plane_reduced" && y > 6000000){
+    y -= 6000000;
+  }
+
+  let Eout, Nout;
+
+  if(tipIn === "plane_reduced"){
+    const Nhat = x / m0;
+    const Ehat = (y - falseE) / m0;
+    Eout = Ehat;
+    Nout = Nhat;
+  } else {
+    const N = x * m0;
+    const E = y * m0 + falseE;
+    Eout = E;
+    Nout = N;
+  }
+
+  // vrati zonu ako treba
+  if(datumOut === "dks1901" && tipOut === "plane_reduced"){
+    if(Eout < 1000000) Eout += 6000000;
+  }
+
+  document.getElementById("oName").value = name;
+  document.getElementById("o1").value = fmt(Eout,10);
+  document.getElementById("o2").value = fmt(Nout,10);
+  document.getElementById("o3").value = fmt(H,10);   // 🔵 H IDENTIČAN
+
+  return;
+}
+  alert("Odabrali ste isti ulazni i izlazni datum te vrstu koordinata.\nJedan od parametara mora biti različit.");
+  return;
+}
+
+if (!name || !u1 || !u2 || !document.getElementById("u3").value.trim()){
+  alert("Unesite ulazne vrijednosti.");
+  return;
+}
+
+
+let {X,Y,Z} = toCartesianFromInput();
+
+if (![X,Y,Z].every(Number.isFinite)){
+  alert("Ulazne vrijednosti nisu ispravne brojevne vrijednosti.");
+  return;
+}
+
+  if (datumIn !== datumOut){
+    const p = readHelmertParams();
+    const ok = [p.Tx,p.Ty,p.Tz,p.ppm,p.Rx,p.Ry,p.Rz].every(Number.isFinite);
+    if (!ok){
+      alert("Nedostaju/nisu ispravni Helmert parametri za odabrani smjer transformacije.");
+      return;
+    }
+    ({X,Y,Z} = helmertStrictXYZ(X,Y,Z,p));
+  }
+
+  const prec = getPrecisionPolicy();
+  const out = fromCartesianToOutput(X,Y,Z,prec);
+
+  document.getElementById("oName").value = name;
+  document.getElementById("o1").value = out.o1;
+  document.getElementById("o2").value = out.o2;
+  document.getElementById("o3").value = out.o3;
+
+  // 🔵 AUTOMATSKO SPREMANJE TOČKE
+tockeMap.set(name, {
+  oznaka: name,
+  u1: document.getElementById("u1").value.trim(),
+  u2: document.getElementById("u2").value.trim(),
+  u3: document.getElementById("u3").value.trim(),
+  idx: tockeMap.has(name) ? tockeMap.get(name).idx : (++tockeCounter)
+});
+
+postavkeZakljucane = true;
+izbrisiSveKlikCounter = 0;
+}
+
+function dodaj(){
+  const datumIn  = document.getElementById("datumIn").value;
+  const tipIn    = document.getElementById("tipIn").value;
+  const name     = document.getElementById("tocka").value.trim();
+  const u1v      = document.getElementById("u1").value.trim();
+  const u2v      = document.getElementById("u2").value.trim();
+  const u3v      = document.getElementById("u3").value.trim();
+
+  if(!datumIn || !tipIn){
+    alert("Odaberite ulazni datum i vrstu koordinata.");
+    return;
+  }
+if(!name || !u1v || !u2v || !u3v){    
+  alert("Unesite ulazne vrijednosti.");
+    return;
+  }
+
+  // provjeri samo ULaz (da alert bude samo za ulaz)
+  const {X,Y,Z} = toCartesianFromInput();
+  if (![X,Y,Z].every(Number.isFinite)){
+    alert("Ulazne vrijednosti nisu ispravne brojevne vrijednosti.");
+    return;
+  }
+
+  // ✅ spremamo ULaz (ne izlaz!)
+  listaTocaka.push({ oznaka: name, u1: u1v, u2: u2v, u3: u3v });
+  alert("Točka dodana!");
+}
+
+function izvezi(){
+  const datumIn  = document.getElementById("datumIn").value;
+  const tipIn    = document.getElementById("tipIn").value;
+  const datumOut = document.getElementById("datumOut").value;
+  const tipOut   = document.getElementById("tipOut").value;
+
+  if(!datumIn || !tipIn){
+    alert("Odaberite ulazni datum i vrstu koordinata.");
+    return;
+  }
+  if(!datumOut || !tipOut){
+    // nije “što je u izlazu”, ali treba za konverziju i zaglavlja
+    alert("Odaberite izlazni datum i vrstu koordinata.");
+    return;
+  }
+
+const sourceList = (uvezeneTocke.length>0)
+  ? uvezeneTocke
+  : Array.from(tockeMap.values()).sort((a,b)=>a.idx-b.idx);  
+  if(sourceList.length===0){
+    alert("Nema dodanih ili uvezenih točaka.");
+    return;
+  }
+
+  const h1 = document.getElementById("iz1").textContent;
+  const h2 = document.getElementById("iz2").textContent;
+  const h3 = document.getElementById("iz3").textContent;
+
+  // zapamti trenutno stanje forme (da ne “presloži” korisniku ekran)
+  const snapshot = {
+    tocka: document.getElementById("tocka").value,
+    u1: document.getElementById("u1").value,
+    u2: document.getElementById("u2").value,
+    u3: document.getElementById("u3").value,
+    oName: document.getElementById("oName").value,
+    o1: document.getElementById("o1").value,
+    o2: document.getElementById("o2").value,
+    o3: document.getElementById("o3").value
+  };
+
+  // ===== FORMATIRANJE DATUMA =====
+function mjesecHR(m){
+  const arr=["siječnja","veljače","ožujka","travnja","svibnja","lipnja","srpnja","kolovoza","rujna","listopada","studenoga","prosinca"];
+  return arr[m]||"";
+}
+
+const now=new Date();
+const nadnevak=`${String(now.getDate()).padStart(2,"0")}. ${mjesecHR(now.getMonth())} ${now.getFullYear()}., ${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
+
+// ===== ZAGLAVLJE TXT =====
+let s="";
+s+="TRANSFORMACIJA I KONVERZIJA KOORDINATA\n";
+s+=`Nadnevak:\t\t\t ${nadnevak}\n`;
+s+=`Ulazni datum:\t\t ${document.getElementById("datumIn").selectedOptions[0].text}\n`;
+s+=`Ulazne koordinate:\t ${document.getElementById("tipIn").selectedOptions[0].text}\n`;
+s+=`Izlazni datum:\t\t ${document.getElementById("datumOut").selectedOptions[0].text}\n`;
+s+=`Izlazne koordinate:\t ${document.getElementById("tipOut").selectedOptions[0].text}\n`;
+s+=`Ukupno točaka:\t\t ${sourceList.length}\n`;
+s+="-------------------------------------------------------------------------------------------------------\n";
+const hUl1 = document.getElementById("ul1").textContent;
+const hUl2 = document.getElementById("ul2").textContent;
+const hUl3 = document.getElementById("ul3").textContent;
+
+s+=`Točka;${hUl1};${hUl2};${hUl3};${h1};${h2};${h3}\n`;  
+for(const pt of sourceList){
+    // ✅ uvijek koristi ULazne vrijednosti
+    document.getElementById("tocka").value = (pt.oznaka ?? pt.name ?? "").trim();
+    document.getElementById("u1").value = (pt.u1 ?? "").trim();
+    document.getElementById("u2").value = (pt.u2 ?? "").trim();
+    document.getElementById("u3").value = (pt.u3 ?? "").trim();
+
+    // pokreni normalno (alert će se javiti samo ako ulaz ne valja)
+    run();
+
+    const o1 = document.getElementById("o1").value;
+    const o2 = document.getElementById("o2").value;
+    const o3 = document.getElementById("o3").value;
+
+const ul1=document.getElementById("u1").value;
+const ul2=document.getElementById("u2").value;
+const ul3=document.getElementById("u3").value;
+
+const nameOut = document.getElementById("oName").value;
+function decComma(v){
+  return String(v).replace(/\./g,",");
+}
+
+s+=`${nameOut};${decComma(ul1)};${decComma(ul2)};${decComma(ul3)};${decComma(o1)};${decComma(o2)};${decComma(o3)}\n`;  
+}
+
+  // vrati formu kako je bila
+  document.getElementById("tocka").value = snapshot.tocka;
+  document.getElementById("u1").value = snapshot.u1;
+  document.getElementById("u2").value = snapshot.u2;
+  document.getElementById("u3").value = snapshot.u3;
+  document.getElementById("oName").value = snapshot.oName;
+  document.getElementById("o1").value = snapshot.o1;
+  document.getElementById("o2").value = snapshot.o2;
+  document.getElementById("o3").value = snapshot.o3;
+
+  const blob = new Blob([s], {type:"text/plain;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "koordinate.txt";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+
+  postavkeZakljucane = false;
+}
+
+function ocisti(){
+
+  const oznaka = document.getElementById("tocka").value.trim();
+
+  // ako postoji u spremljenoj listi → izbriši
+  if(oznaka && tockeMap.has(oznaka)){
+    tockeMap.delete(oznaka);
+    renderLista();
+  }
+
+  // isprazni formu
+  ["tocka","u1","u2","u3","oName","o1","o2","o3"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value = "";
+  });
+
+  postavkeZakljucane = false;
+}
+
+function izbrisiSve(){
+  clearTimeout(autoRunTimer);
+  blockAutoRun = true;
+clearTimeout(autoRunTimer);
+
+  const sourceList = (uvezeneTocke.length>0)
+    ? uvezeneTocke
+    : Array.from(tockeMap.values());
+
+  // Ako je lista prazna → ništa ne radi, nema alerta
+  if(sourceList.length === 0){
+    izbrisiSveKlikCounter = 0;
+    return;
+  }
+
+  izbrisiSveKlikCounter++;
+
+  // 🔴 Neparni klik → alert
+  if(izbrisiSveKlikCounter % 2 === 1){
+
+    alert("Jeste li sigurni da želite izbrisati sve dosadašnje zapise?\nAko da, ponovno kliknite na 'Izbriši sve'.");
+
+    return;
+  }
+
+  // 🔵 Parni klik → briše sve
+  tockeMap.clear();
+  uvezeneTocke = [];
+  renderLista();
+
+  // 🔥 DODANO: očisti i trenutni unos
+  ocisti();
+
+  // 🔵 VRATI POSTAVKE NA "Odaberite"
+document.getElementById("datumIn").value = "";
+document.getElementById("tipIn").value = "";
+document.getElementById("datumOut").value = "";
+document.getElementById("tipOut").value = "";
+
+// reset Helmert sekcije i zaglavlja
+onDatumChange();
+azurirajZaglavlja();
+
+  izbrisiSveKlikCounter = 0;
+  setTimeout(()=> blockAutoRun = false, 100);
+}
+// ===== SMART AUTO RUN (DEBOUNCE) =====
+let autoRunTimer = null;
+
+function autoRunDebounced(){
+  clearTimeout(autoRunTimer);
+  autoRunTimer = setTimeout(()=>{
+    autoRunIfReady();
+  }, 220); // 220 ms delay = QGIS feel 😄
+}
+
+function autoRunIfReady(){
+  if(blockAutoRun) return;
+
+  const datumIn  = document.getElementById("datumIn").value;
+  const tipIn    = document.getElementById("tipIn").value;
+  const datumOut = document.getElementById("datumOut").value;
+  const tipOut   = document.getElementById("tipOut").value;
+
+  const name = document.getElementById("tocka").value.trim();
+  const u1   = document.getElementById("u1").value.trim();
+  const u2   = document.getElementById("u2").value.trim();
+  const u3   = document.getElementById("u3").value.trim();
+
+  if(!datumIn || !tipIn || !datumOut || !tipOut) return;
+  if(!name || !u1 || !u2 || !u3) return;
+
+  run(); // 🔥 OVO FALI
+}
+
+window.onload = () => { 
+  onDatumChange(); 
+  azurirajZaglavlja(); 
+  hookAutoUpsert();
+["datumIn","datumOut","tipIn","tipOut"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+
+  // 🔴 BLOKIRAJ PRIJE OTVARANJA DROPDOWNA
+el.addEventListener("focus", function(e){    
+  if(postavkeZakljucane){
+      e.preventDefault();   // sprječava otvaranje
+      e.stopPropagation();
+
+      alert("Upozorenje!\nPromjenom ulaznog i izlaznog datuma te vrste koordinata svi vaši prethodni unosi bit će izbrisani i nećete ih moći izvesti.\nUkoliko su vam potrebni, molimo da ponajprije izvezete dosadašnje rezultate, a zatim promijenite postavke.");
+
+      postavkeZakljucane = false;  // 🔓 otključaj
+
+      return false;
+    }
+  });
+
+  // normalna promjena
+  el.addEventListener("change", ()=>{
+    if(id.includes("datum")){
+      onDatumChange();
+    } else {
+      azurirajZaglavlja();
+    }
+  });
+});
+
+  // AUTO RUN TRIGGERS
+  ["datumIn","datumOut","tipIn","tipOut","tocka","u1","u2","u3"].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+el.addEventListener("change", autoRunDebounced);
+  });
+};
+/* ===========================
+   Promijeni smjer (predznaci)
+=========================== */
+function flipHelmertSigns(){
+  const ids = ["pTx","pTy","pTz","pS","pRx","pRy","pRz"];
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = num(el.value);
+    if (!Number.isFinite(v)) return;
+    el.value = String(-v);
+  });
+}
+document.getElementById("btnFlipHelmert")?.addEventListener("click", flipHelmertSigns);
+document.getElementById("btnImportHelmert")?.addEventListener("click", uveziHelmertParametre);
+
+function syncRotCheckboxes(checked){
+  ["rotCbRx","rotCbRy","rotCbRz"].forEach(id=>{
+    const el = document.getElementById(id);
+    if (el) el.checked = checked;
+  });
+  updateHelmertUnitLabels();
+}
+["rotCbRx","rotCbRy","rotCbRz"].forEach(id=>{
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("change", (e)=> syncRotCheckboxes(e.target.checked));
+});
+
+document.getElementById("dmUnitM")?.addEventListener("change", updateHelmertUnitLabels);
+
+function restrictNumericInput(e){
+  const allowed = /[0-9\s.,]/;
+  
+  if (e.ctrlKey || e.metaKey || e.key === "Backspace" || 
+      e.key === "Delete" || e.key === "ArrowLeft" || 
+      e.key === "ArrowRight" || e.key === "Tab") {
+    return;
+  }
+
+  if (!allowed.test(e.key)) {
+    e.preventDefault();
+  }
+}
+
+// primijeni na u1, u2, u3
+["u1","u2","u3"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener("keypress", restrictNumericInput);
+});
+
+function sanitizeOnInput(e){
+  e.target.value = e.target.value.replace(/[^0-9\s.,]/g, "");
+}
+
+["u1","u2","u3"].forEach(id=>{
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.addEventListener("input", sanitizeOnInput);
+});
+
+</script>
+
+</body>
+</html>
