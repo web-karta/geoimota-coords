@@ -6,6 +6,7 @@
   <title>Transformacija i konverzija koordinata</title>
       <link rel="icon" type="image/png" href="ikona.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bitmaks/cm-web-fonts@latest/fonts.css">
+  <link href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=PT+Serif:wght@400;700&display=swap" rel="stylesheet">
   <script src="height_anomaly_EGM2008.js"></script>
   <style>
     body { background:#F2F2F2; font-family:'CMU Serif',serif; padding:20px; }
@@ -44,14 +45,247 @@
     #tblLista{
   display:none;
 }
+
+/* Centrirani, kompaktni prikaz; sve cjeline slijede jedna ispod druge. */
+* { box-sizing:border-box; }
+body { margin:0; padding:20px 14px 36px; font-size:14px; }
+.appLayout { width:min(100%, 900px); margin:0 auto; }
+h2 { text-align:center; font-size:22px; margin:0 0 14px; }
+h3 { font-size:17px; margin:0 0 10px; text-align:center; }
+.card { max-width:none; width:100%; padding:14px 16px; }
+.red { max-width:none; gap:8px; margin:7px 0; flex-wrap:nowrap; }
+.red label { width:155px; flex:0 0 155px; font-size:14px; }
+.red select { width:min(100%, 450px); font-size:14px; padding:6px 8px; height:34px; }
+input, select, textarea { font-size:14px; }
+input { font-size:14px; height:31px; padding:4px 7px; min-width:0; }
+table { max-width:none; margin-top:10px; }
+th,td { font-size:14px; padding:6px; }
+button { font-size:13px; padding:7px 10px; margin-top:9px; margin-right:6px; }
+.mainActionButton { width:105px; height:36px; }
+.helmertHeader > label { font-size:16px; top:0; }
+.helmertHeader { gap:10px; }
+.grid3 { gap:8px 12px; }
+#helmertCard { margin-bottom:12px; }
+.dataCard { margin-top:12px; }
+.tableScroll { max-height:none; overflow-x:auto; overflow-y:auto; border:1px solid #d9d9d9; border-radius:5px; }
+.dataTable { margin:0; width:100%; min-width:540px; }
+.dataTable th,.dataTable td { padding:7px 9px; font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dataTable th { position:sticky; top:0; background:#f3f3f3; z-index:1; }
+.dataTable td { text-align:center; }
+.dataTable tbody tr:nth-child(even) { background:#fafafa; }
+.dataTable tbody tr { cursor:pointer; }
+.dataTable tbody tr:hover { background:#eaf2fb; }
+@media(max-width:650px) {
+ body { padding:12px 8px 28px; }
+ .card { padding:11px 9px; }
+ h2 { font-size:19px; }
+ .red { flex-wrap:wrap; gap:4px; }
+ .red label { flex:1 0 100%; width:100%; }
+ .red select { width:100%; }
+ .grid3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .helmertHeader { grid-template-columns:1fr; }
+ .helmertHeader > label { white-space:normal; }
+ .mainActionButton { width:calc(33.333% - 9px); min-width:85px; }
+ th,td { padding:4px 2px; font-size:12px; }
+ input { font-size:12px; padding:3px; }
+ .unitRightText { display:none; }
+}
+
+
+/* Čitljivije dimenzije i sklopivo okno transformacijskih parametara. */
+body { font-size:17px; padding:24px 16px 44px; }
+.appLayout { width:min(100%, 1060px); }
+h2 { font-size:29px; margin-bottom:20px; }
+h3 { font-size:21px; margin-bottom:13px; }
+.card { padding:20px 23px; }
+.red { gap:13px; margin:12px 0; }
+.red label { width:190px; flex:0 0 190px; font-size:17px; }
+.red select { width:min(100%, 610px); font-size:17px; height:43px; padding:8px 10px; }
+input, select, textarea { font-size:17px; }
+input { font-size:17px; height:40px; padding:7px 9px; }
+th, td { font-size:17px; padding:10px 8px; }
+button { font-size:16px; padding:10px 14px; margin-top:12px; }
+.mainActionButton { width:128px; height:45px; }
+.dataCard { margin-top:16px; }
+.tableScroll { max-height:330px; }
+.dataTable { min-width:580px; }
+.dataTable th,.dataTable td { font-size:16px; padding:10px 12px; }
+#helmertCard { margin-top:16px !important; margin-bottom:16px; }
+.helmertToggle { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.helmertToggleTitle { font-size:20px; font-weight:700; }
+.helmertExpandButton { display:inline-flex; align-items:center; justify-content:center; width:38px; height:38px; padding:7px; margin:0; border:1px solid #bbb; border-radius:6px; background:#fafafa; cursor:pointer; flex-shrink:0; }
+.helmertExpandButton:hover { background:#ededed; }
+.helmertExpandButton svg { width:22px; height:22px; stroke:#333; stroke-width:1.8; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+#helmertCard:not(.expanded) #helmertContent { display:none; }
+#helmertCard.expanded .expandGlyph { display:none; }
+#helmertCard:not(.expanded) .collapseGlyph { display:none; }
+#helmertContent { margin-top:17px; }
+.helmertHeader { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.helmertHeader > button { font-size:15px; }
+@media (max-width:650px) {
+ body { padding:14px 9px 30px; font-size:16px; }
+ h2 { font-size:24px; }
+ h3 { font-size:19px; }
+ .card { padding:14px 12px; }
+ .red { flex-wrap:wrap; gap:6px; }
+ .red label { width:100%; flex:1 0 100%; font-size:16px; }
+ .red select { width:100%; height:42px; font-size:16px; }
+ input { font-size:15px; height:38px; padding:5px; }
+ th,td { font-size:14px; padding:7px 3px; }
+ .mainActionButton { width:calc(33.333% - 10px); min-width:91px; height:43px; font-size:15px; }
+ .helmertToggleTitle { font-size:18px; }
+ .helmertHeader { grid-template-columns:1fr; }
+ .grid3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .dataTable th,.dataTable td { font-size:15px; }
+}
+
+
+/* Ujednačeno, umjereno smanjenje prikaza i dva stupca za datum i koordinate. */
+body { font-size:15px; padding:18px 14px 34px; }
+.appLayout { width:min(100%, 1020px); }
+h2 { font-size:25px; margin-bottom:15px; }
+h3 { font-size:19px; margin-bottom:11px; }
+.card { padding:16px 18px; }
+.datumGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px 20px; }
+.datumPair { min-width:0; }
+.datumGrid + table { margin-top:22px; }
+.datumPair .red { display:flex; flex-direction:column; align-items:stretch; gap:5px; margin:0; }
+.datumPair .red + .red { margin-top:16px; }
+.datumPair .red label { width:auto; flex:none; font-size:15px; }
+.datumPair .red select { width:100%; max-width:100%; min-width:0; height:37px; font-size:15px; padding:5px 8px; }
+input, select, textarea { font-size:15px; }
+input { font-size:15px; height:35px; padding:5px 7px; }
+th, td { font-size:15px; padding:7px 6px; }
+button { font-size:14px; padding:8px 12px; margin-top:10px; }
+.mainActionButton { width:115px; height:40px; }
+.dataCard { margin-top:13px; }
+.tableScroll { max-height:285px; }
+.dataTable th,.dataTable td { font-size:14px; padding:8px 10px; }
+#helmertCard { margin-top:13px !important; margin-bottom:13px; }
+.helmertToggleTitle { font-size:18px; }
+.helmertExpandButton { width:34px; height:34px; }
+.helmertExpandButton svg { width:19px; height:19px; }
+@media (max-width:650px) {
+ body { padding:12px 7px 25px; font-size:14px; }
+ h2 { font-size:21px; }
+ .card { padding:12px 9px; }
+ .datumGrid { gap:8px; }
+ .datumPair .red + .red { margin-top:13px; }
+ .datumPair .red label { font-size:13px; }
+ .datumPair .red select { height:37px; font-size:13px; padding:5px 4px; }
+ .mainActionButton { height:39px; font-size:13px; min-width:0; }
+ input { font-size:14px; height:35px; }
+ th,td { font-size:13px; padding:5px 3px; }
+ .dataTable th,.dataTable td { font-size:13px; }
+}
+
+  
+/* Informacijski prozor — stil web-karte Općine Grude */
+.geoInfoHeader { position:relative; display:flex; justify-content:center; align-items:center; min-height:44px; margin-bottom:12px; padding:0 50px; }
+.geoInfoHeader h2 { margin:0; }
+.geoInfoTrigger { position:absolute; right:0; top:50%; transform:translateY(-50%); width:44px; height:44px; border-radius:50%; background:white; border:0; padding:8px; margin:0; display:flex; justify-content:center; align-items:center; box-shadow:0 1px 4px rgba(0,0,0,.3); cursor:pointer; }
+.geoInfoTrigger:hover,.geoInfoTrigger:focus-visible { background:#FFF2CC; }
+.geoInfoTrigger img { width:100%; height:100%; object-fit:contain; }
+.geoInfoOverlay { position:fixed; inset:0; z-index:99990; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.38); padding:14px; }
+.geoInfoOverlay.is-open { display:flex; }
+.geoInfoDialog { position:relative; width:min(100%,540px); max-height:min(720px,calc(100dvh - 28px)); overflow-y:auto; background:#fff; border-radius:18px; box-shadow:0 2px 12px rgba(0,0,0,.35); padding:22px 24px 20px; font-family:'PT Sans',sans-serif; color:#111; font-size:14px; line-height:1.4; }
+.geoInfoDialog h3 { font-family:'PT Serif',serif; font-size:21px; font-weight:700; text-align:center; margin:0 30px 16px; }
+.geoInfoDialog h4 { font-family:'PT Serif',serif; font-size:15px; border-bottom:1px solid #ddd; padding-bottom:4px; margin:18px 0 8px; }
+.geoInfoDialog p { margin:0 0 11px; text-align:justify; }
+.geoInfoClose { position:absolute; top:7px; right:10px; border:0; background:transparent; color:#757575; font:normal 26px Tahoma,Verdana,sans-serif; width:34px; height:34px; padding:0; margin:0; cursor:pointer; }
+.geoInfoClose:hover { color:#000; }
+.geoInfoLogos { display:grid; grid-template-columns:1fr 1fr 1.5fr; align-items:center; gap:15px; padding:12px 0 2px; }
+.geoInfoLogo { min-width:0; text-align:center; }
+.geoInfoLogo img { width:100%; height:83px; object-fit:contain; display:block; }
+.geoInfoLogo:last-child img { height:83px; }
+.geoInfoLogo span { display:block; font-size:12px; color:#555; margin-top:6px; }
+.geoInfoNote { font-size:12px; color:#555; margin-top:14px !important; }
+@media(max-width:650px) {
+ .geoInfoHeader { padding:0 44px 0 0; }
+ .geoInfoHeader h2 { font-size:20px; }
+ .geoInfoTrigger { width:38px; height:38px; }
+ .geoInfoDialog { padding:18px 15px 16px; font-size:13px; }
+ .geoInfoDialog h3 { font-size:18px; }
+ .geoInfoLogos { gap:8px; }
+ .geoInfoLogo img,.geoInfoLogo:last-child img { height:60px; }
+ .geoInfoLogo span { font-size:10px; }
+}
+
+
+/* Poravnati podatci o autoru bez obruba; ne utječe na koordinatne tablice. */
+.geoInfoDialog .geoInfoAuthorTable {
+  width:100%; max-width:none; margin:0 0 11px; border:0;
+  border-collapse:collapse; table-layout:auto; background:transparent;
+  font-family:'PT Sans',sans-serif; font-size:14px;
+}
+.geoInfoDialog .geoInfoAuthorTable th,
+.geoInfoDialog .geoInfoAuthorTable td {
+  border:0; background:transparent; padding:2px 7px 2px 0;
+  text-align:left; vertical-align:top; font-size:inherit;
+  line-height:1.35; overflow-wrap:break-word;
+}
+.geoInfoDialog .geoInfoAuthorTable th {
+  width:142px; min-width:142px; font-weight:700; white-space:nowrap;
+}
+@media(max-width:650px) {
+  .geoInfoDialog .geoInfoAuthorTable { font-size:13px; }
+  .geoInfoDialog .geoInfoAuthorTable th { width:126px; min-width:126px; }
+}
+
+/* Kompaktna visina polja i tablica – tekst ostaje čitljiv. */
+.appLayout .card { padding:12px 16px; }
+.appLayout .datumPair .red select {
+  height:31px; min-height:31px; padding:3px 8px; line-height:1.2;
+}
+.appLayout .datumPair .red { gap:3px; }
+.appLayout .datumPair .red + .red { margin-top:12px; }
+.appLayout .datumGrid + table { margin-top:16px; }
+.appLayout .card > table { margin-top:9px; }
+.appLayout .card > table th,
+.appLayout .card > table td { padding:4px 6px; line-height:1.2; }
+.appLayout .card > table input {
+  height:29px; min-height:29px; padding:3px 7px; line-height:1.2;
+}
+.appLayout .mainActionButton {
+  height:32px; padding:3px 8px; margin-top:9px; line-height:1.2;
+}
+.appLayout .dataCard { margin-top:11px; }
+.appLayout .dataCard h3 { margin-bottom:8px; }
+.appLayout .dataTable th,
+.appLayout .dataTable td { padding:5px 8px; line-height:1.25; }
+.appLayout #helmertCard { margin-top:11px !important; margin-bottom:11px; }
+.appLayout #helmertContent { margin-top:12px; }
+.appLayout #helmertContent .helmertHeader { margin-bottom:7px; }
+.appLayout #helmertContent .helmertHeader button {
+  min-height:31px; padding:5px 8px; margin-top:0; line-height:1.2;
+}
+.appLayout #helmertContent .grid3 { row-gap:5px; }
+.appLayout #helmertContent .grid3 input[type="text"] {
+  height:30px; min-height:30px; padding:3px 7px; line-height:1.2;
+}
+.appLayout #helmertContent .grid3 label { line-height:1.2; }
+.appLayout .helmertExpandButton { width:31px; height:31px; padding:5px; }
+@media (max-width:650px) {
+  .appLayout .card { padding:10px 9px; }
+  .appLayout .datumPair .red select { height:32px; min-height:32px; }
+  .appLayout .card > table input { height:30px; min-height:30px; }
+  .appLayout .mainActionButton { height:33px; }
+}
+
   </style>
 </head>
 <body>
 
-<h2>Transformacija i konverzija koordinata</h2>
+<main class="appLayout">
+<div class="geoInfoHeader">
+  <h2>Transformacija i konverzija koordinata</h2>
+  <button type="button" class="geoInfoTrigger" id="geoInfoTrigger" aria-label="O programu" aria-haspopup="dialog" aria-controls="geoInfoOverlay" title="O programu" onclick="openGeoInfo()"><img src="ikona.png" alt=""></button>
+</div>
 
 <div class="card">
-  <div class="red">
+  <div class="datumGrid">
+    <div class="datumPair">
+<div class="red">
     <label for="datumIn">Ulazni datum:</label>
     <select id="datumIn">
         <option value="" selected disabled hidden>Odaberite</option>
@@ -59,8 +293,7 @@
       <option value="bh_etrs89">BH_ETRS89 (GRS80)</option>
     </select>
   </div>
-
-  <div class="red">
+<div class="red">
     <label for="tipIn">Ulazne koordinate:</label>
     <select id="tipIn">
       <option value="" selected disabled hidden>Odaberite</option>
@@ -71,8 +304,9 @@
 <option value="plane_nonreduced">Nereducirane ravninske koordinate</option>
     </select>
   </div>
-
-    <div class="red">
+    </div>
+    <div class="datumPair">
+<div class="red">
     <label for="datumOut">Izlazni datum:</label>
     <select id="datumOut">
         <option value="" selected disabled hidden>Odaberite</option>
@@ -80,8 +314,7 @@
       <option value="bh_etrs89">BH_ETRS89 (GRS80)</option>
     </select>
   </div>
-
-  <div class="red">
+<div class="red">
     <label for="tipOut">Izlazne koordinate:</label>
     <select id="tipOut">
       <option value="" selected disabled hidden>Odaberite</option>
@@ -91,6 +324,8 @@
 <option value="plane_reduced">Reducirane ravninske koordinate</option>
 <option value="plane_nonreduced">Nereducirane ravninske koordinate</option>
     </select>
+  </div>
+    </div>
   </div>
 
   <table>
@@ -171,9 +406,16 @@
   </div>
 </div>
 
-<div class="card" id="helmertCard" style="margin-top:14px">
+<div class="card" id="helmertCard" style="margin-top:12px;display:none">
+  <div class="helmertToggle">
+    <span class="helmertToggleTitle">Transformacijski parametri</span>
+    <button type="button" class="helmertExpandButton" id="helmertExpandButton" aria-label="Proširi transformacijske parametre" aria-expanded="false" aria-controls="helmertContent" onclick="toggleHelmertPanel()" title="Proširi / suzi okno">
+      <svg class="expandGlyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3H3v6M3 3l7 7M15 21h6v-6M21 21l-7-7"/></svg>
+      <svg class="collapseGlyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10h7V3M10 10 3 3M21 14h-7v7M14 14l7 7"/></svg>
+    </button>
+  </div>
+  <div id="helmertContent">
   <div class="helmertHeader">
-    <label>Transformacijski parametri:</label>
     <button class="btn" id="btnImportHelmert" type="button">Uvezi transformacijske parametre</button>
     <button class="btn" id="btnFlipHelmert" type="button">Promijeni smjer transformacije</button>
   </div>
@@ -217,10 +459,70 @@
   </div>
 
   <div id="helmertExtra" style="margin-top:10px"></div>
+  </div>
 </div>
 </div>
 
+<section class="card dataCard" aria-labelledby="ulazniNaslov">
+  <h3 id="ulazniNaslov">Ulazni podatci</h3>
+  <div class="tableScroll" tabindex="0" aria-label="Pomicanje ulaznih podataka">
+    <table class="dataTable"><thead><tr><th>Točka</th><th id="inH1"></th><th id="inH2"></th><th id="inH3"></th></tr></thead><tbody id="ulazniBody"></tbody></table>
+  </div>
+</section>
+<section class="card dataCard" aria-labelledby="izlazniNaslov">
+  <h3 id="izlazniNaslov">Izlazni podatci</h3>
+  <div class="tableScroll" tabindex="0" aria-label="Pomicanje izlaznih podataka">
+    <table class="dataTable"><thead><tr><th>Točka</th><th id="outH1"></th><th id="outH2"></th><th id="outH3"></th></tr></thead><tbody id="izlazniBody"></tbody></table>
+  </div>
+</section>
+</main>
+
+<div id="geoInfoOverlay" class="geoInfoOverlay" onclick="if(event.target===this)closeGeoInfo()">
+  <section class="geoInfoDialog" role="dialog" aria-modal="true" aria-labelledby="geoInfoTitle" tabindex="-1">
+    <button type="button" class="geoInfoClose" aria-label="Zatvori informacije" onclick="closeGeoInfo()">×</button>
+    <h3 id="geoInfoTitle">O programu</h3>
+    <p><strong>Transformacija i konverzija koordinata</strong> geodetski je alat razvijen prvenstveno za potrebe vježbi iz kolegija <strong>Geodetski referentni okviri</strong> na <strong>Fakultetu građevinarstva, arhitekture i geodezije Sveučilišta u Mostaru</strong>.</br>
+    <p>Program omogućuje pretvorbu prostornih kartezijevih, geodetskih i ravninskih koordinata te sedamparametarsku Helmertovu transformaciju između datuma DKS1901 i BH_ETRS89. Podržava pojedinačni i skupni unos točaka, uvoz i izvoz podataka te korisnički unos transformacijskih parametara.</p>
+    <h4>Namjena i uporaba</h4>
+    <p>Alat je namijenjen obrazovnoj, demonstracijskoj i analitičkoj uporabi. Točnost rezultata ovisi o pravilnom izboru koordinatnih sustava, ulaznim podatcima i primijenjenim transformacijskim parametrima. Prije stručne uporabe rezultate treba provjeriti neovisnim postupkom. Program nije službeni transformacijski servis Federalne uprave za geodetske i imovinsko-pravne poslove (FGU).</p>
+    <h4>Autor i razvoj</h4>
+    <table class="geoInfoAuthorTable">
+      <tbody>
+        <tr><th scope="row">Autor:</th><td>Josip Alpeza, univ. mag. ing. geod. et geoinf.</td></tr>
+        <tr><th scope="row">Razvoj projekta:</th><td>Geoinformatički studio GeoIMOTA, Grude</td></tr>
+        <tr><th scope="row">Obrazovna namjena:</th><td>Geodetski referentni okviri</td></tr>
+        <tr><th scope="row">Godina:</th><td>2026.</td></tr>
+      </tbody>
+    </table>
+    <div class="geoInfoLogos">
+      <div class="geoInfoLogo"><img src="FGAG-logo.png" alt="Logotip Fakulteta građevinarstva, arhitekture i geodezije"><span></span></div>
+      <div class="geoInfoLogo"><img src="sum-logo.png" alt="Logotip Sveučilišta u Mostaru"><span></span></div>
+      <div class="geoInfoLogo"><img src="GeoIMOTA-2026.png" alt="Logotip GeoIMOTA"><span></span></div>
+    </div>
+  </section>
+</div>
 <script>
+let geoInfoLastFocus = null;
+function openGeoInfo(){
+  geoInfoLastFocus = document.activeElement;
+  const overlay=document.getElementById('geoInfoOverlay');
+  overlay.classList.add('is-open');
+  document.body.style.overflow='hidden';
+  overlay.querySelector('.geoInfoClose').focus();
+}
+function closeGeoInfo(){
+  document.getElementById('geoInfoOverlay').classList.remove('is-open');
+  document.body.style.overflow='';
+  if(geoInfoLastFocus && typeof geoInfoLastFocus.focus==='function')geoInfoLastFocus.focus();
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape' && document.getElementById('geoInfoOverlay').classList.contains('is-open'))closeGeoInfo();});
+function toggleHelmertPanel(){
+  const panel=document.getElementById('helmertCard');
+  const button=document.getElementById('helmertExpandButton');
+  const expanded=panel.classList.toggle('expanded');
+  button.setAttribute('aria-expanded', String(expanded));
+  button.setAttribute('aria-label', expanded ? 'Suzi transformacijske parametre' : 'Proširi transformacijske parametre');
+}
 let izbrisiSveKlikCounter = 0;
 let postavkeZakljucane = false;
 let prethodnaVrijednost = {};
@@ -337,10 +639,13 @@ function dmsToDecimal(input) {
     const sign = m[1] === '-' ? -1 : 1;
     const D = Number(m[2]);
     const fraction = m[3] || '';
-    // Uvijek dvije znamenke minuta i dvije znamenke cijelih sekundi.
-    if (fraction.length < 4) return NaN;
-    const M = Number(fraction.slice(0, 2));
-    const S = Number(fraction.slice(2, 4) + (fraction.length > 4 ? '.' + fraction.slice(4) : ''));
+    // Dopušteni oblici: DD, DD.MM i DD.MMSSssss.
+    // Jedna ili tri znamenke iza separatora nisu jednoznačan DMS zapis.
+    if (fraction.length === 1 || fraction.length === 3) return NaN;
+    const M = fraction.length >= 2 ? Number(fraction.slice(0, 2)) : 0;
+    const S = fraction.length >= 4
+      ? Number(fraction.slice(2, 4) + (fraction.length > 4 ? '.' + fraction.slice(4) : ''))
+      : 0;
     if (M >= 60 || S >= 60) return NaN;
     return sign * (D + M / 60 + S / 3600);
   }
@@ -635,6 +940,7 @@ function helmertStrictXYZ(X,Y,Z, params){
    UI
 =========================== */
 let tockeMap = new Map();
+let izlazneTocke = new Map();
 let tockeCounter = 0;
 
 let uvezeneTocke = [];
@@ -699,23 +1005,44 @@ function renderLista(){
       <td>${escapeHtml(p.u3 ?? "")}</td>
     </tr>
   `).join("");
+  renderDataPanels();
 }
 
+function validInputPoint(p){
+  try{validatePoint(p);return true;}catch(e){return false;}
+}
+function renderDataPanels(){
+  const inBody = document.getElementById('ulazniBody');
+  const outBody = document.getElementById('izlazniBody');
+  if(!inBody || !outBody) return;
+  const all = [...tockeMap.values()].filter(validInputPoint).sort((a,b)=>a.idx-b.idx);
+  const completed = outputSettingsKey===currentSettingsKey() ? all.filter(p=>izlazneTocke.has(p.oznaka)) : [];
+  const row = (p,vals)=>`<tr data-point="${escapeHtml(p.oznaka)}"><td>${escapeHtml(p.oznaka)}</td>${vals.map(v=>`<td title="${escapeHtml(v ?? '')}">${escapeHtml(v ?? '')}</td>`).join('')}</tr>`;
+  inBody.innerHTML = all.map(p=>row(p,[p.u1,p.u2,p.u3 ?? '0'])).join('');
+  outBody.innerHTML = completed.map(p=>row(p,izlazneTocke.get(p.oznaka))).join('');
+  for(const [a,b] of [['ul1','inH1'],['ul2','inH2'],['ul3','inH3'],['iz1','outH1'],['iz2','outH2'],['iz3','outH3']]){
+    document.getElementById(b).textContent = document.getElementById(a).textContent;
+  }
+  inBody.querySelectorAll('tr').forEach(tr=>tr.addEventListener('click',()=>{
+    const p=all.find(q=>q.oznaka===tr.dataset.point);
+    if(!p)return;
+    for(const [id,value] of [['tocka',p.oznaka],['u1',p.u1],['u2',p.u2],['u3',p.u3]]) document.getElementById(id).value=value;
+  }));
+  for(const body of [inBody,outBody]){
+    const wrapper=body.closest('.tableScroll');
+    const header=body.closest('table').querySelector('thead');
+    const rows=[...body.querySelectorAll('tr')];
+    const height=header.getBoundingClientRect().height+rows.slice(0,5).reduce((sum,r)=>sum+r.getBoundingClientRect().height,0)+2;
+    wrapper.style.maxHeight=rows.length>5?`${Math.ceil(height)}px`:'none';
+  }
+}
 function upsertTrenutniUnos(){
-  const datumIn  = document.getElementById("datumIn").value;
-  const tipIn    = document.getElementById("tipIn").value;
-  if(!datumIn || !tipIn) return;
-
-  const oznaka = document.getElementById("tocka").value.trim();
-  const u1 = document.getElementById("u1").value.trim();
-  const u2 = document.getElementById("u2").value.trim();
-  const u3 = document.getElementById("u3").value.trim();
-
-if(!oznaka || !u1 || !u2 || !u3) return;
-  const existing = tockeMap.get(oznaka);
-  const idx = existing ? existing.idx : (++tockeCounter);
-
-  tockeMap.set(oznaka, { oznaka, u1, u2, u3, idx });
+  const p={oznaka:document.getElementById('tocka').value.trim(),u1:document.getElementById('u1').value.trim(),u2:document.getElementById('u2').value.trim(),u3:document.getElementById('u3').value.trim() || '0'};
+  if(!validInputPoint(p))return;
+  const old=tockeMap.get(p.oznaka);
+  p.idx=old?old.idx:++tockeCounter;
+  if(old && (old.u1!==p.u1 || old.u2!==p.u2 || old.u3!==p.u3))izlazneTocke.delete(p.oznaka);
+  tockeMap.set(p.oznaka,p);
   renderLista();
 }
 
@@ -1091,62 +1418,115 @@ if (tip === "plane_reduced"){
 }
 
 function uvozi(){
-  alert("Dopušteni razdjelnici su točka-zarez, razmak i tabulator.\n(Ako su ulazni podatci u ravnini projekcije te nemate vrijednosti ortometrijske visine, postavite ju na '0'. U suprotnom, uvoz točaka neće biti moguć.)");
-    listaTocaka = [];
-    uvezeneTocke = [];
   const fi = document.getElementById("fileInput");
-  fi.value="";
-  fi.click();
-
-  fi.onchange = ()=>{
+  fi.value = "";
+  fi.onchange = () => {
     const file = fi.files[0];
-    if(!file) return;
-
+    if (!file) return;
     const reader = new FileReader();
-
-    reader.onload = (e)=>{
-      const txt = e.target.result;
-
-      const redovi = txt.split(/\r?\n/);
-      uvezeneTocke = [];
-
-      for(const r of redovi){
-        if(!r.trim()) continue;
-
-        // podrška , ili ;
-const parts = r.split(/[;\t ]+/).map(p=>p.trim());
-        const oznaka = (parts[0]||"").trim();
-        const u1 = (parts[1]||"").trim();
-        const u2 = (parts[2]||"").trim();
-        const u3 = (parts[3]||"").trim();
-
-if(!oznaka || !u1 || !u2 || !u3) continue;
-
-        uvezeneTocke.push({
-          oznaka,
-          u1,
-          u2,
-          u3
-        });
+    reader.onload = (e) => {
+      const fail = (detail) => alert(
+        "Greška uvoza koordinata.\n" + detail +
+        "\n\nFormat mora biti: Točka;1. koordinata;2. koordinata;3. koordinata." +
+        "\nAko nema oznake točke, dopuštena su tri stupca koordinata (automatski se dodjeluje naziv točkama: T1, T2, T3...)." +
+        "\nTreća koordinata smije biti prazna; tada se uzima vrijednost 0."
+      );
+      const lines = String(e.target.result || "").replace(/^\uFEFF/, "").split(/\r?\n/);
+      const separator = /^\s*-{20,}\s*$/;
+      const separatorIndices = lines.flatMap((line, i) => separator.test(line) ? [i] : []);
+      const hasOwnHeader = lines.some(line => line.trim().toUpperCase() === "TRANSFORMACIJA I KONVERZIJA KOORDINATA");
+      const ownExport = hasOwnHeader && separatorIndices.length > 0;
+      let dataLines;
+      if (ownExport) {
+        // Preskoči metapodatke, prvi razdjelnik i JEDAN idući redak (zaglavlje stupaca).
+        dataLines = lines.slice(separatorIndices[0] + 2);
+      } else if (hasOwnHeader || separatorIndices.length) {
+        fail("Nepotpun ili neprepoznatljiv format izvoza programa.");
+        return;
+      } else {
+        dataLines = lines;
       }
 
-      if(uvezeneTocke.length===0){
-        alert("Nema valjanih zapisa.\nProvjerite koristite li jedan od dopuštenih razdjelnika (točka-zarez, tabulator i razmak) te ima li svaka točka definiran naziv te sve tri koordinate.\nAko su ulazni podatci u ravnini projekcije te nemate vrijednosti ortometrijske visine, postavite ju na '0'");
+      const parsed = [];
+      const numeric = /^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][+-]?\d+)?$/;
+      const isNumeric = value => numeric.test(value) && Number.isFinite(Number(value.replace(',', '.')));
+      const splitRow = (line) => {
+        // Točka-zarez i tabulator čuvaju prazno završno polje (visina = 0).
+        if (line.includes(';')) return line.split(';').map(x => x.trim());
+        if (line.includes('\t')) return line.split('\t').map(x => x.trim());
+        return line.trim().split(/\s+/);
+      };
+      for (let i = 0; i < dataLines.length; i++) {
+        const line = dataLines[i].trim();
+        if (!line) continue;
+        // Drugi razdjelnik u izvozu, ako postoji, označava kraj tablice.
+        if (ownExport && separator.test(line)) break;
+        const cols = splitRow(dataLines[i]);
+        let oznaka, values;
+        if (ownExport) {
+          // Izvoz sadrži: oznaka;ul1;ul2;ul3;iz1;iz2;iz3.
+          if (cols.length < 7) {
+            fail(`Redak ${i + 1}: izvoz nema svih sedam stupaca.`);
+            return;
+          }
+          oznaka = cols[0];
+          values = cols.slice(1, 4);
+        } else if (cols.length === 4) {
+          oznaka = cols[0];
+          values = cols.slice(1);
+        } else if (cols.length === 3) {
+          oznaka = `T${parsed.length + 1}`;
+          values = cols;
+        } else {
+          fail(`Redak ${i + 1}: pronađeno ${cols.length} stupaca, očekuju se tri ili četiri.`);
+          return;
+        }
+        if (!oznaka || !values[0] || !values[1]) {
+          fail(`Redak ${i + 1}: nedostaje oznaka točke ili prva/druga koordinata.`);
+          return;
+        }
+        const u3 = values[2] === '' ? '0' : values[2];
+        if (![values[0], values[1], u3].every(isNumeric)) {
+          fail(`Redak ${i + 1}: koordinata sadrži tekst ili neispravnu brojčanu vrijednost.`);
+          return;
+        }
+        if (parsed.some(p => p.oznaka === oznaka)) {
+          fail(`Redak ${i + 1}: oznaka točke „${oznaka}” pojavljuje se više puta.`);
+          return;
+        }
+        parsed.push({oznaka, u1: values[0], u2: values[1], u3});
+      }
+      if (!parsed.length) {
+        fail("Datoteka ne sadrži nijednu valjanu točku.");
         return;
       }
+      // Dodaj nove točke bez brisanja postojećih. Sukobljene oznake dobivaju sufiks.
+      const existingNames=new Set(tockeMap.keys());
+      let renamed=0;
+      for(const p of parsed){
+        let name=p.oznaka;
+        if(existingNames.has(name)){
+          let n=2;
+          while(existingNames.has(`${name}_${n}`))n++;
+          name=`${name}_${n}`;
+          renamed++;
+        }
+        existingNames.add(name);
+        p.oznaka=name;
+        tockeMap.set(name,{...p,idx:++tockeCounter});
+      }
+      uvezeneTocke=[]; // Jedini izvor za prikaz i izvoz jest zajednički popis.
+      renderLista();
+      const first=parsed[0];
+      for(const [id,value] of [['tocka',first.oznaka],['u1',first.u1],['u2',first.u2],['u3',first.u3]])document.getElementById(id).value=value;
+      for(const id of ['oName','o1','o2','o3'])document.getElementById(id).value='';
+      alert(`Uspješno dodano ${parsed.length} točaka.${renamed?` Preimenovano ${renamed} ponovljenih oznaka.`:''}`);
 
-      // prikaži samo prvu točku u formi
-      const p = uvezeneTocke[0];
-      document.getElementById("tocka").value = p.oznaka;
-      document.getElementById("u1").value = p.u1;
-      document.getElementById("u2").value = p.u2;
-      document.getElementById("u3").value = p.u3;
-
-      alert("Zapis uvezen.\nOdaberite datum i vrstu koordinata zapisa te odredite izlazni datum i vrstu koordinata.");
     };
-
-    reader.readAsText(file,"UTF-8");
+    reader.onerror = () => alert("Datoteku nije moguće pročitati.");
+    reader.readAsText(file, "UTF-8");
   };
+  fi.click();
 }
 
 function uveziHelmertParametre(){
@@ -1191,154 +1571,89 @@ function uveziHelmertParametre(){
   };
 }
 
-function run(){
-
-  const datumIn  = document.getElementById("datumIn").value;
-  const tipIn    = document.getElementById("tipIn").value;
-  const datumOut = document.getElementById("datumOut").value;
-  const tipOut   = document.getElementById("tipOut").value;
-
-  const name = document.getElementById("tocka").value.trim();
-
-  // 🔴 prvo: mora sve biti odabrano
-  if(!datumIn || !tipIn || !datumOut || !tipOut){
-    alert("Odaberite ulazni i izlazni datum te vrstu koordinata.");
-    return;
+// Jedinstveni kontrolni mehanizam: rezultati vrijede samo za trenutačne postavke.
+function currentSettingsKey(){
+  const ids=['datumIn','tipIn','datumOut','tipOut','pTx','pTy','pTz','pRx','pRy','pRz','pS'];
+  return JSON.stringify([...ids.map(id=>document.getElementById(id)?.value ?? ''),
+    ...['rotCbRx','rotCbRy','rotCbRz','dmUnitM'].map(id=>!!document.getElementById(id)?.checked)]);
+}
+let outputSettingsKey = '';
+function invalidateOutputs(){
+  izlazneTocke.clear();
+  outputSettingsKey = '';
+  for(const id of ['oName','o1','o2','o3']) document.getElementById(id).value='';
+  renderDataPanels();
+}
+function validatePoint(p){
+  const tip=document.getElementById('tipIn').value;
+  if(!document.getElementById('datumIn').value || !tip) throw Error('Odaberite ulazni datum i vrstu koordinata.');
+  if(!p.oznaka || !String(p.u1).trim() || !String(p.u2).trim()) throw Error('Nedostaje oznaka ili koordinata točke.');
+  const v1=tip==='geo_dms'?dmsToDecimal(p.u1):num(p.u1);
+  const v2=tip==='geo_dms'?dmsToDecimal(p.u2):num(p.u2);
+  const v3=num(String(p.u3??'').trim() || '0');
+  if(![v1,v2,v3].every(Number.isFinite)) throw Error('Koordinate moraju biti ispravne brojčane vrijednosti.');
+  if((tip==='geo_dms'||tip==='geo_deg') && (Math.abs(v1)>90 || Math.abs(v2)>180))
+    throw Error('Geografska širina mora biti od −90° do 90°, a dužina od −180° do 180°.');
+  if(tip==='cart'){
+    const radius=Math.hypot(v1,v2,v3);
+    if(radius<5e6 || radius>8e6) throw Error('Prostorne koordinate nisu blizu Zemljine površine (duljina radij-vektora izvan 5000–8000 km). Provjerite jeste li odabrali ispravnu vrstu koordinata.');
   }
-
-const u1 = document.getElementById("u1").value.trim();
-const u2 = document.getElementById("u2").value.trim();
-
-if (!name || !u1 || !u2 || !document.getElementById("u3").value.trim()){
-  alert("Unesite ulazne vrijednosti.");
-  return;
 }
-// 🚫 ISTI DATUM + ISTA VRSTA → ZABRANA
-if(datumIn === datumOut && tipIn === tipOut){
-  // 🔵 SPECIJALNI SLUČAJ: reducirane <-> nereducirane
-if(
-  datumIn === datumOut &&
-  (
-    (tipIn === "plane_reduced" && tipOut === "plane_nonreduced") ||
-    (tipIn === "plane_nonreduced" && tipOut === "plane_reduced")
-  )
-){
-  // koristi samo ravninske formule bez geoidne anomalije
-
-  const m0 = DATUMS[datumIn].m0;
-  const falseE = DATUMS[datumIn].falseE;
-
-  let y = num(document.getElementById("u1").value);
-  let x = num(document.getElementById("u2").value);
-  let H = num(document.getElementById("u3").value);
-  if(!Number.isFinite(H)) H = 0;
-
-  // ukloni zonu ako treba
-  if(datumIn === "dks1901" && tipIn === "plane_reduced" && y > 6000000){
-    y -= 6000000;
-  }
-
-  let Eout, Nout;
-
-  if(tipIn === "plane_reduced"){
-    const Nhat = x / m0;
-    const Ehat = (y - falseE) / m0;
-    Eout = Ehat;
-    Nout = Nhat;
-  } else {
-    const N = x * m0;
-    const E = y * m0 + falseE;
-    Eout = E;
-    Nout = N;
-  }
-
-  // vrati zonu ako treba
-  if(datumOut === "dks1901" && tipOut === "plane_reduced"){
-    if(Eout < 1000000) Eout += 6000000;
-  }
-
-  document.getElementById("oName").value = name;
-  document.getElementById("o1").value = fmt(Eout,10);
-  document.getElementById("o2").value = fmt(Nout,10);
-  document.getElementById("o3").value = fmt(H,10);   // 🔵 H IDENTIČAN
-
-  return;
-}
-  alert("Odabrali ste isti ulazni i izlazni datum te vrstu koordinata.\nJedan od parametara mora biti različit.");
-  return;
-}
-
-if (!name || !u1 || !u2 || !document.getElementById("u3").value.trim()){
-  alert("Unesite ulazne vrijednosti.");
-  return;
-}
-
-
-let {X,Y,Z} = toCartesianFromInput();
-
-if (![X,Y,Z].every(Number.isFinite)){
-  alert("Ulazne vrijednosti nisu ispravne brojevne vrijednosti.");
-  return;
-}
-
-  if (datumIn !== datumOut){
-    const p = readHelmertParams();
-    const ok = [p.Tx,p.Ty,p.Tz,p.ppm,p.Rx,p.Ry,p.Rz].every(Number.isFinite);
-    if (!ok){
-      alert("Nedostaju/nisu ispravni Helmert parametri za odabrani smjer transformacije.");
-      return;
+function calculatePoint(p){
+  validatePoint(p);
+  const din=document.getElementById('datumIn').value, dout=document.getElementById('datumOut').value;
+  const tin=document.getElementById('tipIn').value, tout=document.getElementById('tipOut').value;
+  if(!dout || !tout) throw Error('Odaberite izlazni datum i vrstu koordinata.');
+  if(din===dout && tin===tout) throw Error('Ulazni i izlazni datum i vrsta koordinata su jednaki.');
+  const ids=['tocka','u1','u2','u3'];
+  const previous=ids.map(id=>document.getElementById(id).value);
+  try{
+    [p.oznaka,p.u1,p.u2,p.u3??'0'].forEach((v,i)=>document.getElementById(ids[i]).value=v);
+    if(din===dout && ((tin==='plane_reduced'&&tout==='plane_nonreduced')||(tin==='plane_nonreduced'&&tout==='plane_reduced'))){
+      const m0=DATUMS[din].m0, falseE=DATUMS[din].falseE;
+      let y=num(p.u1), x=num(p.u2), H=num(p.u3??'0');
+      if(din==='dks1901'&&tin==='plane_reduced'&&y>6000000)y-=6000000;
+      let e,n;
+      if(tin==='plane_reduced'){e=(y-falseE)/m0;n=x/m0;}
+      else {e=y*m0+falseE;n=x*m0;}
+      if(dout==='dks1901'&&tout==='plane_reduced'&&e<1000000)e+=6000000;
+      return [fmt(e,10),fmt(n,10),fmt(H,10)];
     }
-    ({X,Y,Z} = helmertStrictXYZ(X,Y,Z,p));
-  }
-
-  const prec = getPrecisionPolicy();
-  const out = fromCartesianToOutput(X,Y,Z,prec);
-
-  document.getElementById("oName").value = name;
-  document.getElementById("o1").value = out.o1;
-  document.getElementById("o2").value = out.o2;
-  document.getElementById("o3").value = out.o3;
-
-  // 🔵 AUTOMATSKO SPREMANJE TOČKE
-tockeMap.set(name, {
-  oznaka: name,
-  u1: document.getElementById("u1").value.trim(),
-  u2: document.getElementById("u2").value.trim(),
-  u3: document.getElementById("u3").value.trim(),
-  idx: tockeMap.has(name) ? tockeMap.get(name).idx : (++tockeCounter)
-});
-
-postavkeZakljucane = true;
-izbrisiSveKlikCounter = 0;
+    let {X,Y,Z}=toCartesianFromInput();
+    if(![X,Y,Z].every(Number.isFinite)) throw Error('Nije moguće pretvoriti ulazne koordinate.');
+    if(din!==dout){
+      const par=readHelmertParams();
+      if(![par.Tx,par.Ty,par.Tz,par.ppm,par.Rx,par.Ry,par.Rz].every(Number.isFinite))
+        throw Error('Unesite svih sedam valjanih transformacijskih parametara.');
+      ({X,Y,Z}=helmertStrictXYZ(X,Y,Z,par));
+    }
+    if(![X,Y,Z].every(Number.isFinite)) throw Error('Transformacija je vratila neispravne vrijednosti.');
+    const result=fromCartesianToOutput(X,Y,Z,getPrecisionPolicy());
+    const values=[result.o1,result.o2,result.o3];
+    if(values.some(v=>v===''||v===null||v===undefined||!Number.isFinite(num(v))))
+      throw Error('Izračun nije dao valjane izlazne koordinate.');
+    return values;
+  } finally { previous.forEach((v,i)=>document.getElementById(ids[i]).value=v); }
+}
+function run(){
+  const p={oznaka:document.getElementById('tocka').value.trim(),u1:document.getElementById('u1').value.trim(),u2:document.getElementById('u2').value.trim(),u3:document.getElementById('u3').value.trim()||'0'};
+  try{
+    const result=calculatePoint(p);
+    const old=tockeMap.get(p.oznaka);
+    tockeMap.set(p.oznaka,{...p,idx:old?.idx??++tockeCounter});
+    if(outputSettingsKey!==currentSettingsKey()) izlazneTocke.clear();
+    outputSettingsKey=currentSettingsKey();
+    izlazneTocke.set(p.oznaka,result);
+    ['oName','o1','o2','o3'].forEach((id,i)=>document.getElementById(id).value=i?result[i-1]:p.oznaka);
+    renderLista();
+    postavkeZakljucane=true;
+    izbrisiSveKlikCounter=0;
+  }catch(e){alert('Izračun nije moguć: '+e.message);}
 }
 
 function dodaj(){
-  const datumIn  = document.getElementById("datumIn").value;
-  const tipIn    = document.getElementById("tipIn").value;
-  const name     = document.getElementById("tocka").value.trim();
-  const u1v      = document.getElementById("u1").value.trim();
-  const u2v      = document.getElementById("u2").value.trim();
-  const u3v      = document.getElementById("u3").value.trim();
-
-  if(!datumIn || !tipIn){
-    alert("Odaberite ulazni datum i vrstu koordinata.");
-    return;
-  }
-if(!name || !u1v || !u2v || !u3v){    
-  alert("Unesite ulazne vrijednosti.");
-    return;
-  }
-
-  // provjeri samo ULaz (da alert bude samo za ulaz)
-  const {X,Y,Z} = toCartesianFromInput();
-  if (![X,Y,Z].every(Number.isFinite)){
-    alert("Ulazne vrijednosti nisu ispravne brojevne vrijednosti.");
-    return;
-  }
-
-  // ✅ spremamo ULaz (ne izlaz!)
-  listaTocaka.push({ oznaka: name, u1: u1v, u2: u2v, u3: u3v });
-  alert("Točka dodana!");
+  // Dodavanje je dopušteno samo kada su i ulaz i izlaz valjani.
+  run();
 }
 
 function izvezi(){
@@ -1351,15 +1666,7 @@ function izvezi(){
     alert("Odaberite ulazni datum i vrstu koordinata.");
     return;
   }
-  if(!datumOut || !tipOut){
-    // nije “što je u izlazu”, ali treba za konverziju i zaglavlja
-    alert("Odaberite izlazni datum i vrstu koordinata.");
-    return;
-  }
-
-const sourceList = (uvezeneTocke.length>0)
-  ? uvezeneTocke
-  : Array.from(tockeMap.values()).sort((a,b)=>a.idx-b.idx);  
+  const sourceList=Array.from(tockeMap.values()).filter(validInputPoint).sort((a,b)=>a.idx-b.idx);
   if(sourceList.length===0){
     alert("Nema dodanih ili uvezenih točaka.");
     return;
@@ -1368,18 +1675,6 @@ const sourceList = (uvezeneTocke.length>0)
   const h1 = document.getElementById("iz1").textContent;
   const h2 = document.getElementById("iz2").textContent;
   const h3 = document.getElementById("iz3").textContent;
-
-  // zapamti trenutno stanje forme (da ne “presloži” korisniku ekran)
-  const snapshot = {
-    tocka: document.getElementById("tocka").value,
-    u1: document.getElementById("u1").value,
-    u2: document.getElementById("u2").value,
-    u3: document.getElementById("u3").value,
-    oName: document.getElementById("oName").value,
-    o1: document.getElementById("o1").value,
-    o2: document.getElementById("o2").value,
-    o3: document.getElementById("o3").value
-  };
 
   // ===== FORMATIRANJE DATUMA =====
 function mjesecHR(m){
@@ -1406,40 +1701,14 @@ const hUl3 = document.getElementById("ul3").textContent;
 
 s+=`Točka;${hUl1};${hUl2};${hUl3};${h1};${h2};${h3}\n`;  
 for(const pt of sourceList){
-    // ✅ uvijek koristi ULazne vrijednosti
-    document.getElementById("tocka").value = (pt.oznaka ?? pt.name ?? "").trim();
-    document.getElementById("u1").value = (pt.u1 ?? "").trim();
-    document.getElementById("u2").value = (pt.u2 ?? "").trim();
-    document.getElementById("u3").value = (pt.u3 ?? "").trim();
-
-    // pokreni normalno (alert će se javiti samo ako ulaz ne valja)
-    run();
-
-    const o1 = document.getElementById("o1").value;
-    const o2 = document.getElementById("o2").value;
-    const o3 = document.getElementById("o3").value;
-
-const ul1=document.getElementById("u1").value;
-const ul2=document.getElementById("u2").value;
-const ul3=document.getElementById("u3").value;
-
-const nameOut = document.getElementById("oName").value;
-function decComma(v){
-  return String(v).replace(/\./g,",");
+  const ul=[pt.u1,pt.u2,pt.u3 ?? '0'];
+  let output=null;
+  if(datumOut && tipOut){
+    try{output=calculatePoint(pt);}catch(e){output=null;}
+  }
+  const decComma=v=>String(v ?? '').replace(/\./g,',');
+  s+=`${[pt.oznaka,...ul,...(output ?? ['','',''])].map(decComma).join(';')}\n`;
 }
-
-s+=`${nameOut};${decComma(ul1)};${decComma(ul2)};${decComma(ul3)};${decComma(o1)};${decComma(o2)};${decComma(o3)}\n`;  
-}
-
-  // vrati formu kako je bila
-  document.getElementById("tocka").value = snapshot.tocka;
-  document.getElementById("u1").value = snapshot.u1;
-  document.getElementById("u2").value = snapshot.u2;
-  document.getElementById("u3").value = snapshot.u3;
-  document.getElementById("oName").value = snapshot.oName;
-  document.getElementById("o1").value = snapshot.o1;
-  document.getElementById("o2").value = snapshot.o2;
-  document.getElementById("o3").value = snapshot.o3;
 
   const blob = new Blob([s], {type:"text/plain;charset=utf-8"});
   const url = URL.createObjectURL(blob);
@@ -1457,22 +1726,8 @@ s+=`${nameOut};${decComma(ul1)};${decComma(ul2)};${decComma(ul3)};${decComma(o1)
 }
 
 function ocisti(){
-
-  const oznaka = document.getElementById("tocka").value.trim();
-
-  // ako postoji u spremljenoj listi → izbriši
-  if(oznaka && tockeMap.has(oznaka)){
-    tockeMap.delete(oznaka);
-    renderLista();
-  }
-
-  // isprazni formu
-  ["tocka","u1","u2","u3","oName","o1","o2","o3"].forEach(id=>{
-    const el = document.getElementById(id);
-    if(el) el.value = "";
-  });
-
-  postavkeZakljucane = false;
+  // Očisti samo trenutačni obrazac; spremljene točke briše isključivo „Izbriši sve”.
+  ['tocka','u1','u2','u3','oName','o1','o2','o3'].forEach(id=>document.getElementById(id).value='');
 }
 
 function izbrisiSve(){
@@ -1503,6 +1758,7 @@ clearTimeout(autoRunTimer);
   // 🔵 Parni klik → briše sve
   tockeMap.clear();
   uvezeneTocke = [];
+  izlazneTocke.clear();
   renderLista();
 
   // 🔥 DODANO: očisti i trenutni unos
@@ -1513,6 +1769,7 @@ document.getElementById("datumIn").value = "";
 document.getElementById("tipIn").value = "";
 document.getElementById("datumOut").value = "";
 document.getElementById("tipOut").value = "";
+for(const id of ZASTICENI_ODABIRI) posljednjiOdabiri[id]="";
 
 // reset Helmert sekcije i zaglavlja
 onDatumChange();
@@ -1547,7 +1804,8 @@ function autoRunIfReady(){
   if(!datumIn || !tipIn || !datumOut || !tipOut) return;
   if(!name || !u1 || !u2 || !u3) return;
 
-  run(); // 🔥 OVO FALI
+  if(datumIn!==datumOut && ![readHelmertParams().Tx,readHelmertParams().Ty,readHelmertParams().Tz,readHelmertParams().Rx,readHelmertParams().Ry,readHelmertParams().Rz,readHelmertParams().ppm].every(Number.isFinite))return;
+  run();
 }
 
 window.addEventListener("pageshow", () => {
@@ -1556,27 +1814,58 @@ window.addEventListener("pageshow", () => {
   if (!document.getElementById("tipIn").value) input.removeAttribute("placeholder");
 });
 
+// Dvostupanjska zaštita: prvi pokušaj samo obavještava, drugi dopušta promjenu.
+const ZASTICENI_ODABIRI = ['datumIn','datumOut','tipIn','tipOut'];
+const posljednjiOdabiri = {};
+let promjenaPotvrdjenaObavijescu = false;
+function postaviZastituOdabira(){
+  for(const id of ZASTICENI_ODABIRI){
+    const el=document.getElementById(id);
+    posljednjiOdabiri[id]=el.value;
+    el.addEventListener('change', function(event){
+      const prethodna=posljednjiOdabiri[id];
+      const nova=el.value;
+      if(nova===prethodna)return;
+      const imaPodataka=tockeMap.size>0 || izlazneTocke.size>0 ||
+        uvezeneTocke.length>0 ||
+        ['tocka','u1','u2','u3'].some(k=>document.getElementById(k).value.trim()!=='');
+      if(imaPodataka && !promjenaPotvrdjenaObavijescu){
+        // Vrati prethodnu vrijednost: prva promjena NE briše ništa.
+        el.value=prethodna;
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        promjenaPotvrdjenaObavijescu=true;
+        window.alert(
+          'Promjena ulaznog ili izlaznog datuma odnosno vrste koordinata izbrisat će sve trenutno unesene i izračunate točke.\n'+
+          'Ako želite sačuvati podatke, najprije ih izvezite.\n'+
+          'U suprotnom ponovno odaberite datum ili vrstu koordinata.'
+        );
+        return;
+      }
+      if(imaPodataka){
+        clearTimeout(autoRunTimer);
+        tockeMap.clear();
+        izlazneTocke.clear();
+        uvezeneTocke=[];
+        tockeCounter=0;
+        outputSettingsKey='';
+        izbrisiSveKlikCounter=0;
+        ocisti();
+        renderLista();
+      }
+      promjenaPotvrdjenaObavijescu=false;
+      posljednjiOdabiri[id]=nova;
+    },true);
+  }
+}
 window.onload = () => { 
+  postaviZastituOdabira();
   onDatumChange(); 
   azurirajZaglavlja(); 
-  hookAutoUpsert();
+  // Pohrana u prikaz tek nakon uspješnog izračuna.
 ["datumIn","datumOut","tipIn","tipOut"].forEach(id=>{
   const el = document.getElementById(id);
   if(!el) return;
-
-  // 🔴 BLOKIRAJ PRIJE OTVARANJA DROPDOWNA
-el.addEventListener("focus", function(e){    
-  if(postavkeZakljucane){
-      e.preventDefault();   // sprječava otvaranje
-      e.stopPropagation();
-
-      alert("Upozorenje!\nPromjenom ulaznog i izlaznog datuma te vrste koordinata svi vaši prethodni unosi bit će izbrisani i nećete ih moći izvesti.\nUkoliko su vam potrebni, molimo da ponajprije izvezete dosadašnje rezultate, a zatim promijenite postavke.");
-
-      postavkeZakljucane = false;  // 🔓 otključaj
-
-      return false;
-    }
-  });
 
   // normalna promjena
   el.addEventListener("change", ()=>{
@@ -1585,11 +1874,18 @@ el.addEventListener("focus", function(e){
     } else {
       azurirajZaglavlja();
     }
+    renderDataPanels();
   });
 });
 
+  // Svaka promjena konfiguracije ili Helmertovih parametara poništava stare izlaze.
+  ['datumIn','datumOut','tipIn','tipOut','pTx','pTy','pTz','pRx','pRy','pRz','pS',
+   'rotCbRx','rotCbRy','rotCbRz','dmUnitM'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){if(!ZASTICENI_ODABIRI.includes(id))el.addEventListener('input',invalidateOutputs);el.addEventListener('change',invalidateOutputs);}
+  });
   // AUTO RUN TRIGGERS
-  ["datumIn","datumOut","tipIn","tipOut","tocka","u1","u2","u3"].forEach(id=>{
+  ["tocka","u1","u2","u3"].forEach(id=>{
     const el = document.getElementById(id);
     if(!el) return;
 el.addEventListener("change", autoRunDebounced);
@@ -1607,6 +1903,7 @@ function flipHelmertSigns(){
     if (!Number.isFinite(v)) return;
     el.value = String(-v);
   });
+  invalidateOutputs();
 }
 document.getElementById("btnFlipHelmert")?.addEventListener("click", flipHelmertSigns);
 document.getElementById("btnImportHelmert")?.addEventListener("click", uveziHelmertParametre);
@@ -1658,5 +1955,6 @@ function sanitizeOnInput(e){
 
 </script>
 
+<!-- Provjera referentnih točaka i transformacijskih konvencija obvezna je prije stručne uporabe. -->
 </body>
 </html>
